@@ -10,11 +10,23 @@ class ServerThread extends Thread {
 	private ObjectInputStream in;
 	private ObjectOutputStream out;
 	private boolean isRunning = false;
-	private SocketServer server;
+	private Room currentRoom;
 
-	public ServerThread(Socket myClient, SocketServer server) throws IOException {
+	protected synchronized Room getCurrentRoom() {
+		return (currentRoom);
+	}
+
+	protected synchronized void setCurrentRoom(Room room) {
+		if (room != null) {
+			currentRoom = room;
+		} else {
+			System.out.println("The room is null");
+		}
+	}
+
+	public ServerThread(Socket myClient, Room room) throws IOException {
 		this.client = myClient;
-		this.server = server;
+		this.currentRoom = room;
 		out = new ObjectOutputStream(client.getOutputStream());
 		in = new ObjectInputStream(client.getInputStream());
 	}
@@ -38,7 +50,7 @@ class ServerThread extends Thread {
 
 			while (isRunning && !client.isClosed() && (fromClient = (String) in.readObject()) != null) {
 				System.out.println("User: " + fromClient);
-				server.broadcast(fromClient, this.getId());
+				currentRoom.sendMessage(this, fromClient);
 			}
 		} catch (Exception e) {
 			System.out.println("User Disconnected");
@@ -49,8 +61,9 @@ class ServerThread extends Thread {
 	}
 
 	private void cleanup() {
-		if (server != null) {
-			server.disconnect(this);
+		if (currentRoom != null) {
+			System.out.println("Leaving room");
+			currentRoom.removeClient(this);
 		}
 
 		if (in != null) {

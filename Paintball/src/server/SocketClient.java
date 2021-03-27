@@ -33,7 +33,7 @@ class SocketClient {
 						System.out.println("Awaitng Messages");
 						String line = doabarrelroll.nextLine();
 
-						if (!"quit".equalsIgnoreCase(line) && line != null) {
+						if (!"/exit".equalsIgnoreCase(line) && line != null) {
 							out.writeObject(line);
 						} else {
 							System.out.println("Stopping Thread");
@@ -121,27 +121,19 @@ class SocketClient {
 		// TODO Auto-generated method stub
 
 		SocketClient client = new SocketClient();
-		Scanner doabarrelroll = new Scanner(System.in);
 		String ip;
 		int p;
 
 		System.out.print("Enter Address: ");
-		ip = doabarrelroll.next();
+		ip = args[0];
 
-		while (true) {
-			System.out.print("Enter Port: ");
-			try {
-				p = Integer.parseInt(doabarrelroll.next());
-			} catch (NumberFormatException e) {
-				System.out.println("Enter numbers only");
-				p = 0;
-			}
-
-			if (p != 0) {
-				break;
-			}
+		System.out.print("Enter Port: ");
+		try {
+			p = Integer.parseInt(args[1]);
+		} catch (NumberFormatException e) {
+			System.out.println("Enter numbers only");
+			p = 0;
 		}
-		doabarrelroll.close();
 		client.connect(ip, p);
 		client.start();
 	}
