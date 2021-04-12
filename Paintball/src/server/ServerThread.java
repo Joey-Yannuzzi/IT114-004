@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 class ServerThread extends Thread {
 	private Socket client;
@@ -11,6 +13,12 @@ class ServerThread extends Thread {
 	private ObjectOutputStream out;
 	private boolean isRunning = false;
 	private Room currentRoom;
+	private String clientName;
+	private final static Logger log = Logger.getLogger(ServerThread.class.getName());
+
+	public String getClientName() {
+		return clientName;
+	}
 
 	protected synchronized Room getCurrentRoom() {
 		return (currentRoom);
@@ -20,7 +28,7 @@ class ServerThread extends Thread {
 		if (room != null) {
 			currentRoom = room;
 		} else {
-			System.out.println("The room is null");
+			log.log(Level.INFO, "The room is null");
 		}
 	}
 
@@ -31,14 +39,90 @@ class ServerThread extends Thread {
 		in = new ObjectInputStream(client.getInputStream());
 	}
 
+	@Deprecated
 	public boolean send(String message) {
 		try {
 			out.writeObject(message);
 			return (true);
 		} catch (IOException e) {
-			System.out.println("Error sending a message");
+			log.log(Level.INFO, "Error sending a message");
+			e.printStackTrace();
 			cleanup();
 			return (false);
+		}
+	}
+
+	protected boolean send(String clientName, String message) {
+		Payload payload = new Payload();
+		payload.setPayloadType(PayloadType.MESSAGE);
+		payload.setClientName(clientName);
+		payload.setMessage(message);
+		return sendPayload(payload);
+	}
+
+	protected boolean sendConnectionStatus(String clientName, boolean isConnect, String message) {
+		Payload payload = new Payload();
+
+		if (isConnect) {
+			payload.setPayloadType(PayloadType.CONNECT);
+			payload.setMessage(message);
+		} else {
+			payload.setPayloadType(PayloadType.DISCONNECT);
+			payload.setMessage(message);
+		}
+
+		payload.setClientName(clientName);
+		return sendPayload(payload);
+	}
+
+	protected boolean sendClearList() {
+		Payload payload = new Payload();
+		payload.setPayloadType(PayloadType.CLEAR_PLAYERS);
+		return (sendPayload(payload));
+	}
+
+	private boolean sendPayload(Payload p) {
+		try {
+			out.writeObject(p);
+			return (true);
+		} catch (IOException e) {
+			log.log(Level.INFO, "Error sending a message to the user");
+			e.printStackTrace();
+			cleanup();
+			return (false);
+		}
+	}
+
+	private void processPayload(Payload p) {
+		switch (p.getPayloadType()) {
+		case CONNECT:
+			String n = p.getClientName();
+
+			if (n != null) {
+				clientName = n;
+				log.log(Level.INFO, "Set name to " + clientName);
+
+				if (currentRoom != null) {
+					currentRoom.joinLobby(this);
+				}
+			}
+
+			break;
+
+		case DISCONNECT:
+			isRunning = false;
+			break;
+
+		case MESSAGE:
+			currentRoom.sendMessage(this, p.getMessage());
+			break;
+
+		case CLEAR_PLAYERS:
+			break;
+
+		default:
+			log.log(Level.INFO, "Unhandled payload");
+			break;
 		}
 	}
 
@@ -46,23 +130,25 @@ class ServerThread extends Thread {
 	public void run() {
 		try {
 			isRunning = true;
-			String fromClient;
+			Payload fromClient;
 
-			while (isRunning && !client.isClosed() && (fromClient = (String) in.readObject()) != null) {
+			while (isRunning && !client.isClosed() && (fromClient = (Payload) in.readObject()) != null) {
 				System.out.println("User: " + fromClient);
-				currentRoom.sendMessage(this, fromClient);
+				processPayload(fromClient);
 			}
 		} catch (Exception e) {
-			System.out.println("User Disconnected");
+			e.printStackTrace();
+			log.log(Level.INFO, "User Disconnected");
 		} finally {
 			isRunning = false;
+			log.log(Level.INFO, "Cleaning up connection");
 			cleanup();
 		}
 	}
 
 	private void cleanup() {
 		if (currentRoom != null) {
-			System.out.println("Leaving room");
+			log.log(Level.INFO, getName() + " Leaving " + currentRoom.getName());
 			currentRoom.removeClient(this);
 		}
 
@@ -70,7 +156,7 @@ class ServerThread extends Thread {
 			try {
 				in.close();
 			} catch (IOException e) {
-				System.out.println("Already Closed");
+				log.log(Level.INFO, "Already Closed");
 			}
 		}
 
@@ -78,7 +164,7 @@ class ServerThread extends Thread {
 			try {
 				in.close();
 			} catch (IOException e) {
-				System.out.println("Already Closed");
+				log.log(Level.INFO, "Already Closed");
 			}
 		}
 
@@ -86,19 +172,19 @@ class ServerThread extends Thread {
 			try {
 				client.shutdownInput();
 			} catch (IOException e) {
-				System.out.println("Socket is already closed");
+				log.log(Level.INFO, "Socket is already closed");
 			}
 
 			try {
 				client.shutdownOutput();
 			} catch (IOException e) {
-				System.out.println("Socket is already closed");
+				log.log(Level.INFO, "Socket is already closed");
 			}
 
 			try {
 				client.close();
 			} catch (IOException e) {
-				System.out.println("Already Closed");
+				log.log(Level.INFO, "Already Closed");
 			}
 		}
 	}

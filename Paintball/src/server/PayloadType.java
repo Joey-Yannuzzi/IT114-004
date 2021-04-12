@@ -1,5 +1,6 @@
 package server;
 
-class PayloadType {
+public enum PayloadType {
 
+	CONNECT, DISCONNECT, MESSAGE, CLEAR_PLAYERS
 }
