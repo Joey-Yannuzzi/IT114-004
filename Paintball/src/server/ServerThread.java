@@ -1,5 +1,6 @@
 package server;
 
+import java.awt.Point;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -7,7 +8,7 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-class ServerThread extends Thread {
+public class ServerThread extends Thread {
 	private Socket client;
 	private ObjectInputStream in;
 	private ObjectOutputStream out;
@@ -58,6 +59,22 @@ class ServerThread extends Thread {
 		payload.setClientName(clientName);
 		payload.setMessage(message);
 		return sendPayload(payload);
+	}
+
+	protected boolean sendDirection(String clientName, Point dir) {
+		Payload payload = new Payload();
+		payload.setPayloadType(PayloadType.SYNC_DIRECTION);
+		payload.setClientName(clientName);
+		payload.setPoint(dir);
+		return (sendPayload(payload));
+	}
+
+	protected boolean sendPosition(String clientName, Point pos) {
+		Payload payload = new Payload();
+		payload.setPayloadType(PayloadType.SYNC_POSITION);
+		payload.setClientName(clientName);
+		payload.setPoint(pos);
+		return (sendPayload(payload));
 	}
 
 	protected boolean sendConnectionStatus(String clientName, boolean isConnect, String message) {
@@ -118,6 +135,14 @@ class ServerThread extends Thread {
 			break;
 
 		case CLEAR_PLAYERS:
+			break;
+
+		case SYNC_DIRECTION:
+			System.out.println("Direction changed: " + p.getPoint());
+			currentRoom.sendDirectionSync(this, p.getPoint());
+			break;
+
+		case SYNC_POSITION:
 			break;
 
 		default:

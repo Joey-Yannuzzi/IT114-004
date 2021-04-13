@@ -1,17 +1,23 @@
 package client;
 
+import java.awt.Point;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import server.Payload;
 import server.PayloadType;
 
-class SocketClient {
+public enum SocketClient {
+
+	INSTANCE;
 
 	private static Socket server;
 	private static Thread clientThread;
@@ -19,7 +25,7 @@ class SocketClient {
 	private static String clientName;
 	private static ObjectOutputStream out;
 	private final static Logger log = Logger.getLogger(SocketClient.class.getName());
-	private static Event event;
+	private static List<Event> events = new ArrayList<Event>();
 
 	public static boolean connect(String address, String port) {
 		try {
@@ -35,16 +41,23 @@ class SocketClient {
 		return (false);
 	}
 
-	public static void setUsername(String username) {
+	public void setUsername(String username) {
 		clientName = username;
 		sendPayload(buildConnectionStatus(clientName, true));
 	}
 
-	public static void sendMessage(String message) {
+	public void sendMessage(String message) {
 		sendPayload(buildMessage(message));
 	}
 
-	private static Payload buildMessage(String message) {
+	public void syncDirection(Point dir) {
+		Payload p = new Payload();
+		p.setPayloadType(PayloadType.SYNC_DIRECTION);
+		p.setPoint(dir);
+		sendPayload(p);
+	}
+
+	private Payload buildMessage(String message) {
 		Payload payload = new Payload();
 		payload.setPayloadType(PayloadType.MESSAGE);
 		payload.setClientName(clientName);
@@ -52,7 +65,7 @@ class SocketClient {
 		return (payload);
 	}
 
-	private static Payload buildConnectionStatus(String name, boolean isConnect) {
+	private Payload buildConnectionStatus(String name, boolean isConnect) {
 		Payload payload = new Payload();
 
 		if (isConnect) {
@@ -65,7 +78,7 @@ class SocketClient {
 		return (payload);
 	}
 
-	private static void sendPayload(Payload p) {
+	private void sendPayload(Payload p) {
 		try {
 			out.writeObject(p);
 		} catch (IOException e) {
@@ -73,7 +86,7 @@ class SocketClient {
 		}
 	}
 
-	private static void listenForServerMessage(ObjectInputStream in) {
+	private void listenForServerMessage(ObjectInputStream in) {
 		if (fromServerThread != null) {
 			log.log(Level.INFO, "Already listening");
 			return;
@@ -103,30 +116,103 @@ class SocketClient {
 		fromServerThread.start();
 	}
 
-	private static void processPayload(Payload p) {
+	private void sendOnClientConnect(String name, String message) {
+		Iterator<Event> iter = events.iterator();
+
+		while (iter.hasNext()) {
+			Event e = iter.next();
+
+			if (e != null) {
+				e.onClientConnect(name, message);
+			}
+		}
+	}
+
+	private void sendOnClientDisconnect(String name, String message) {
+		Iterator<Event> iter = events.iterator();
+
+		while (iter.hasNext()) {
+			Event e = iter.next();
+
+			if (e != null) {
+				e.onClientDisconnect(name, message);
+			}
+		}
+	}
+
+	private void sendOnMessage(String name, String message) {
+		Iterator<Event> iter = events.iterator();
+
+		while (iter.hasNext()) {
+			Event e = iter.next();
+
+			if (e != null) {
+				e.onMessageReceive(name, message);
+			}
+		}
+	}
+
+	private void sendOnChangeRoom() {
+		Iterator<Event> iter = events.iterator();
+
+		while (iter.hasNext()) {
+			Event e = iter.next();
+
+			if (e != null) {
+				e.onChangeRoom();
+			}
+		}
+	}
+
+	private void sendSyncDirection(String clientName, Point direction) {
+		Iterator<Event> iter = events.iterator();
+
+		while (iter.hasNext()) {
+			Event e = iter.next();
+
+			if (e != null) {
+				e.onSyncDirection(clientName, direction);
+			}
+		}
+	}
+
+	private void sendSyncPosition(String clientName, Point position) {
+		Iterator<Event> iter = events.iterator();
+
+		while (iter.hasNext()) {
+			Event e = iter.next();
+
+			if (e != null) {
+				e.onSyncPosition(clientName, position);
+			}
+		}
+	}
+
+	private void processPayload(Payload p) {
 		switch (p.getPayloadType()) {
 		case CONNECT:
-			if (event != null) {
-				event.onClientConnect(p.getClientName(), p.getMessage());
-			}
+			sendOnClientConnect(p.getClientName(), p.getMessage());
 			break;
 
 		case DISCONNECT:
-			if (event != null) {
-				event.onClientDisconnect(p.getClientName(), p.getMessage());
-			}
+			sendOnClientDisconnect(p.getClientName(), p.getMessage());
 			break;
 
 		case MESSAGE:
-			if (event != null) {
-				event.onMessageReceive(p.getClientName(), p.getMessage());
-			}
+			sendOnMessage(p.getClientName(), p.getMessage());
 			break;
 
 		case CLEAR_PLAYERS:
-			if (event != null) {
-				event.onChangeRoom();
-			}
+			sendOnChangeRoom();
+			break;
+
+		case SYNC_DIRECTION:
+			sendSyncDirection(p.getClientName(), p.getPoint());
+			break;
+
+		case SYNC_POSITION:
+			sendSyncPosition(p.getClientName(), p.getPoint());
+			break;
 
 		default:
 			log.log(Level.WARNING, "Unhandled payload: " + p);
@@ -134,12 +220,16 @@ class SocketClient {
 		}
 	}
 
-	public static void callbackListener(Event e) {
-		event = e;
-		log.log(Level.INFO, "Added listener");
+	public void registerCallbackListener(Event e) {
+		events.add(e);
+		log.log(Level.INFO, "Added Listener");
 	}
 
-	public static boolean connectAndStart(String address, String port) throws IOException {
+	public void removeCallbackListener(Event e) {
+		events.remove(e);
+	}
+
+	public boolean connectAndStart(String address, String port) throws IOException {
 		if (connect(address, port)) {
 			return (start());
 		}
@@ -147,7 +237,7 @@ class SocketClient {
 		return (false);
 	}
 
-	public static boolean start() throws IOException {
+	public boolean start() throws IOException {
 		if (server == null) {
 			log.log(Level.WARNING, "Server does not exist");
 			return (false);
@@ -187,7 +277,7 @@ class SocketClient {
 		return (true);
 	}
 
-	public static void close() {
+	public void close() {
 		if (server != null && !server.isClosed()) {
 			try {
 				server.close();
