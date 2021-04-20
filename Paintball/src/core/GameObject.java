@@ -11,7 +11,7 @@ public abstract class GameObject {
 	protected Point previousPosition = new Point(0, 0);
 	protected Point speed = new Point(2, 2);
 	protected Point direction = new Point(0, 0);
-	protected Dimension size = new Dimension(25, 25);
+	protected Dimension size = new Dimension(50, 50);
 	protected String name = "";
 	protected boolean isActive = true;
 

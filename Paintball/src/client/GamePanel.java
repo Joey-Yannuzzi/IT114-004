@@ -204,6 +204,8 @@ public class GamePanel extends BaseGamePanel implements Event {
 	}
 
 	private synchronized void drawPlayers(Graphics g) {
+		// g.setColor(Color.RED);
+		// g.fillRect(0, 0, 50, 50);
 		Iterator<Player> iter = players.iterator();
 
 		while (iter.hasNext()) {

@@ -186,6 +186,7 @@ public class ClientUI extends JFrame implements Event {
 		userPanel.add(u);
 		users.add(u);
 		pack();
+		// game.onClientConnect(name, "joined");
 	}
 
 	void removeClient(User client) {

@@ -282,6 +282,18 @@ public enum SocketClient {
 		return (true);
 	}
 
+	private void receiveClientConnect(String name, String message) {
+		Iterator<Event> iter = events.iterator();
+
+		while (iter.hasNext()) {
+			Event e = iter.next();
+
+			if (e != null) {
+				e.onClientConnect(name, message);
+			}
+		}
+	}
+
 	public void close() {
 		if (server != null && !server.isClosed()) {
 			try {

@@ -37,7 +37,7 @@ public class SocketServer {
 					log.log(Level.INFO, "Connecting User...");
 					ServerThread thread = new ServerThread(client, lobby);
 					thread.start();
-					Room prelobby = new Room(PRELOBBY);
+					Room prelobby = new Room(PRELOBBY, true);
 					prelobby.addClient(thread);
 					isolatedPrelobbies.add(prelobby);
 					log.log(Level.INFO, "User Added");

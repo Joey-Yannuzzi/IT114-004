@@ -18,7 +18,7 @@ public class Player extends GameObject implements Serializable {
 	public boolean draw(Graphics g) {
 		if (super.draw(g)) {
 			g.setColor(color);
-			g.fillOval(position.x, position.y, size.width, size.height);
+			g.fillRect(position.x, position.y, size.width, size.height);
 			g.setColor(Color.WHITE);
 			g.setFont(new Font("Monospaced", Font.PLAIN, 12));
 			g.drawString("Name: " + name, position.x + nameOffset.x, position.y + nameOffset.y);
