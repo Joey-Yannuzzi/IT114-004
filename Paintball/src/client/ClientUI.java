@@ -5,6 +5,7 @@ import java.awt.CardLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
+import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -109,7 +110,7 @@ public class ClientUI extends JFrame implements Event {
 				String name = username.getText();
 
 				if (name != null && name.length() > 0) {
-					SocketClient.setUsername(name);
+					SocketClient.INSTANCE.setUsername(name);
 					self.next();
 				}
 			}
@@ -146,7 +147,7 @@ public class ClientUI extends JFrame implements Event {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (text.getText().length() > 0) {
-					SocketClient.sendMessage(text.getText());
+					SocketClient.INSTANCE.sendMessage(text.getText());
 					text.setText("");
 				}
 			}
@@ -230,8 +231,8 @@ public class ClientUI extends JFrame implements Event {
 	}
 
 	void connect(String host, String port) throws IOException {
-		SocketClient.callbackListener(this);
-		SocketClient.connectAndStart(host, port);
+		SocketClient.INSTANCE.registerCallbackListener(this);
+		SocketClient.INSTANCE.connectAndStart(host, port);
 	}
 
 	void showUI() {
@@ -293,5 +294,17 @@ public class ClientUI extends JFrame implements Event {
 		if (ui != null) {
 			log.log(Level.FINE, "Started");
 		}
+	}
+
+	@Override
+	public void onSyncDirection(String clientName, Point direction) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onSyncPosition(String clientName, Point position) {
+		// TODO Auto-generated method stub
+
 	}
 }
