@@ -79,6 +79,8 @@ public class GamePanel extends BaseGamePanel implements Event {
 			p.setName(clientName);
 			players.add(p);
 
+			System.out.println(clientName + ": " + playerUsername);
+
 			if (clientName.equals(playerUsername)) {
 				System.out.println("Reset myPlayer");
 				myPlayer = p;

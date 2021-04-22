@@ -41,6 +41,7 @@ public class ClientUI extends JFrame implements Event {
 	List<User> users = new ArrayList<User>();
 	Dimension windowSize = Toolkit.getDefaultToolkit().getScreenSize();
 	GamePanel game;
+	String username;
 
 	public ClientUI(String title) {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -56,7 +57,6 @@ public class ClientUI extends JFrame implements Event {
 		createUserInputScreen();
 		createPanelRoom();
 		createPanelUserList();
-		createDrawingPanel();
 		showUI();
 	}
 
@@ -110,6 +110,11 @@ public class ClientUI extends JFrame implements Event {
 				String name = username.getText();
 
 				if (name != null && name.length() > 0) {
+					self.username = name;
+					createDrawingPanel();
+					pack();
+					self.setTitle(self.getTitle() + " " + self.username);
+					game.setPlayerName(self.username);
 					SocketClient.INSTANCE.setUsername(name);
 					self.next();
 				}
