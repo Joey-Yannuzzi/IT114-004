@@ -1,5 +1,6 @@
 package server;
 
+import java.awt.Point;
 import java.io.Serializable;
 
 public class Payload implements Serializable {
@@ -9,6 +10,8 @@ public class Payload implements Serializable {
 	private String message;
 	private PayloadType payloadType;
 	private int number;
+	int x = 0;
+	int y = 0;
 
 	public void setClientName(String s) {
 		this.clientName = s;
@@ -40,6 +43,15 @@ public class Payload implements Serializable {
 
 	public int getNumber() {
 		return (this.number);
+	}
+
+	public void setPoint(Point p) {
+		x = p.x;
+		y = p.y;
+	}
+
+	public Point getPoint() {
+		return new Point(x, y);
 	}
 
 	@Override

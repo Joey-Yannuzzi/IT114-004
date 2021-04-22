@@ -10,7 +10,7 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-class SocketServer {
+public class SocketServer {
 
 	int port;
 	public static boolean isRunning = false;
@@ -37,7 +37,7 @@ class SocketServer {
 					log.log(Level.INFO, "Connecting User...");
 					ServerThread thread = new ServerThread(client, lobby);
 					thread.start();
-					Room prelobby = new Room(PRELOBBY);
+					Room prelobby = new Room(PRELOBBY, true);
 					prelobby.addClient(thread);
 					isolatedPrelobbies.add(prelobby);
 					log.log(Level.INFO, "User Added");
@@ -59,17 +59,28 @@ class SocketServer {
 	}
 
 	protected void cleanupRoom(Room r) {
-		isolatedPrelobbies.remove(r);
+		Iterator<Room> iter = isolatedPrelobbies.iterator();
+
+		while (iter.hasNext()) {
+			Room check = iter.next();
+
+			if (check.equals(r)) {
+				iter.remove();
+				log.log(Level.INFO, "Removed " + check.getName() + " from prelobbies");
+				break;
+			}
+		}
 	}
 
 	private void cleanup() {
-		Iterator<Room> rooms = this.rooms.iterator();
+		Iterator<Room> iter = this.rooms.iterator();
 
-		while (rooms.hasNext()) {
-			Room r = rooms.next();
+		while (iter.hasNext()) {
+			Room r = iter.next();
 
 			try {
 				r.close();
+				iter.remove();
 			} catch (Exception e) {
 
 			}
@@ -82,6 +93,7 @@ class SocketServer {
 
 			try {
 				r.close();
+				pl.remove();
 			} catch (Exception e) {
 
 			}
@@ -89,6 +101,7 @@ class SocketServer {
 
 		try {
 			lobby.close();
+			log.log(Level.WARNING, "Lobby closed");
 		} catch (Exception e) {
 
 		}
@@ -102,29 +115,35 @@ class SocketServer {
 		Room prelobby = client.getCurrentRoom();
 
 		if (joinRoom(LOBBY, client)) {
-			prelobby.removeClient(client);
-			log.log(Level.INFO, "Added " + client.getClientName() + " to the lobby");
+			if (prelobby != null) {
+				prelobby.removeClient(client);
+				log.log(Level.INFO, "Added " + client.getClientName() + " to the lobby");
+			} else {
+				log.log(Level.WARNING, "Prelobby was null for " + client.getClientName());
+			}
 		} else {
 			log.log(Level.INFO, "Problem adding " + client.getClientName() + " to the lobby");
 		}
 	}
 
 	private Room getRoom(String roomName) {
-		for (int i = 0, l = rooms.size(); i < l; i++) {
-			Room r = rooms.get(i);
+		Iterator<Room> iter = rooms.iterator();
 
-			if (r == null || r.getName() == null) {
-				continue;
-			}
-			if (rooms.get(i).getName().equalsIgnoreCase(roomName)) {
+		while (iter.hasNext()) {
+			Room r = iter.next();
+
+			if (r != null && r.getName() != null && r.getName().equalsIgnoreCase(roomName)) {
 				return (r);
 			}
 		}
+
+		log.log(Level.WARNING, "Error getting room " + roomName);
 		return (null);
 	}
 
 	protected synchronized boolean joinRoom(String roomName, ServerThread client) {
 		if (roomName == null || roomName.equalsIgnoreCase(PRELOBBY)) {
+			log.log(Level.WARNING, "Room is either null or " + PRELOBBY);
 			return (false);
 		}
 
@@ -135,6 +154,8 @@ class SocketServer {
 			if (oldRoom != null) {
 				log.log(Level.INFO, client.getName() + " left " + oldRoom.getName());
 				oldRoom.removeClient(client);
+			} else {
+				log.log(Level.WARNING, "old room is null for " + client.getClientName());
 			}
 			log.log(Level.INFO, client.getName() + " joined " + newRoom.getName());
 			newRoom.addClient(client);

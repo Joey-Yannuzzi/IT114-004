@@ -1,22 +1,37 @@
 package server;
 
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Room implements AutoCloseable {
+import client.Player;
+import core.BaseGamePanel;
+
+public class Room extends BaseGamePanel implements AutoCloseable {
 	private static SocketServer server;
 	private String name;
 	private final static Logger log = Logger.getLogger(Room.class.getName());
 	private final static String COMMAND_TRIGGER = "/";
 	private final static String CREATE_ROOM = "createroom";
 	private final static String JOIN_ROOM = "joinroom";
-	private List<ServerThread> clients = new ArrayList<ServerThread>();
+	private List<ClientPlayer> clients = new ArrayList<ClientPlayer>();
+	static Dimension gameAreaSize = new Dimension(400, 600);
+	long frame = 0;
+
+	public Room(String name, boolean delayStart) {
+		super(delayStart);
+		this.name = name;
+		isServer = true;
+	}
 
 	public Room(String name) {
 		this.name = name;
+		isServer = true;
 	}
 
 	public static void setServer(SocketServer server) {
@@ -27,36 +42,99 @@ public class Room implements AutoCloseable {
 		return (name);
 	}
 
+	private static Point getRandomStartPosition() {
+		Point startPos = new Point();
+		startPos.x = (int) (Math.random() * gameAreaSize.width);
+		startPos.y = (int) (Math.random() * gameAreaSize.height);
+		return (startPos);
+	}
+
 	protected synchronized void addClient(ServerThread client) {
 		client.setCurrentRoom(this);
+		boolean exists = false;
+		Iterator<ClientPlayer> iter = clients.iterator();
 
-		if (clients.indexOf(client) > -1) {
+		while (iter.hasNext()) {
+			ClientPlayer c = iter.next();
+
+			if (c.client == client) {
+				exists = true;
+
+				if (c.player == null) {
+					log.log(Level.WARNING, "Client " + client.getClientName() + " player was null, creating");
+					Player p = new Player();
+					p.setName(client.getClientName());
+					c.player = p;
+					syncClient(c);
+				}
+
+				break;
+			}
+		}
+
+		if (exists) {
 			log.log(Level.INFO, "Cloning a user is not possible");
 		} else {
-			clients.add(client);
+			Player p = new Player();
+			p.setName(client.getClientName());
+			ClientPlayer cp = new ClientPlayer(client, p);
+			clients.add(cp);
+			syncClient(cp);
+		}
+	}
 
-			if (client.getClientName() != null) {
-				client.sendClearList();
-				sendConnectionStatus(client, true, "joined the room " + getName());
-				updateClientList(client);
+	private void syncClient(ClientPlayer cp) {
+		if (cp.client.getClientName() != null) {
+			cp.client.sendClearList();
+			sendConnectionStatus(cp.client, true, "joined the room " + getName());
+			Point startPos = Room.getRandomStartPosition();
+			cp.player.setPosition(startPos);
+			cp.client.sendPosition(cp.client.getClientName(), startPos);
+			sendPositionSync(cp.client, startPos);
+			updateClientList(cp.client);
+			updatePlayers(cp.client);
+		}
+	}
+
+	private synchronized void updatePlayers(ServerThread client) {
+		Iterator<ClientPlayer> iter = clients.iterator();
+
+		while (iter.hasNext()) {
+			ClientPlayer c = iter.next();
+
+			if (c.client != client) {
+				boolean messageSent = client.sendDirection(c.client.getClientName(), c.player.getDirection());
+
+				if (messageSent) {
+					messageSent = client.sendPosition(c.client.getClientName(), c.player.getPosition());
+				}
 			}
 		}
 	}
 
-	private void updateClientList(ServerThread client) {
-		Iterator<ServerThread> iter = clients.iterator();
+	private synchronized void updateClientList(ServerThread client) {
+		Iterator<ClientPlayer> iter = clients.iterator();
 
 		while (iter.hasNext()) {
-			ServerThread c = iter.next();
+			ClientPlayer c = iter.next();
 
-			if (c != client) {
-				boolean messageSent = client.sendConnectionStatus(c.getClientName(), true, null);
+			if (c.client != client) {
+				boolean messageSent = client.sendConnectionStatus(c.client.getClientName(), true, null);
 			}
 		}
 	}
 
 	protected synchronized void removeClient(ServerThread client) {
-		clients.remove(client);
+		Iterator<ClientPlayer> iter = clients.iterator();
+
+		while (iter.hasNext()) {
+			ClientPlayer c = iter.next();
+
+			if (c.client == client) {
+				iter.remove();
+				log.log(Level.INFO, "Removed client " + c.client.getClientName() + " from " + getName());
+			}
+		}
 
 		if (clients.size() > 0) {
 			sendConnectionStatus(client, false, "left the room " + getName());
@@ -129,11 +207,11 @@ public class Room implements AutoCloseable {
 	}
 
 	protected void sendConnectionStatus(ServerThread client, boolean isConnect, String message) {
-		Iterator<ServerThread> iter = clients.iterator();
+		Iterator<ClientPlayer> iter = clients.iterator();
 
 		while (iter.hasNext()) {
-			ServerThread c = iter.next();
-			boolean messageSent = c.sendConnectionStatus(client.getClientName(), isConnect, message);
+			ClientPlayer c = iter.next();
+			boolean messageSent = c.client.sendConnectionStatus(client.getClientName(), isConnect, message);
 
 			if (!messageSent) {
 				iter.remove();
@@ -149,15 +227,57 @@ public class Room implements AutoCloseable {
 			return;
 		}
 
-		Iterator<ServerThread> iter = clients.iterator();
+		Iterator<ClientPlayer> iter = clients.iterator();
 
 		while (iter.hasNext()) {
-			ServerThread client = iter.next();
-			boolean messageSent = client.send(sender.getClientName(), message);
+			ClientPlayer client = iter.next();
+			boolean messageSent = client.client.send(sender.getClientName(), message);
 
 			if (!messageSent) {
 				iter.remove();
-				log.log(Level.INFO, "Removed " + client.getId());
+				log.log(Level.INFO, "Removed " + client.client.getId());
+			}
+		}
+	}
+
+	protected void sendDirectionSync(ServerThread sender, Point dir) {
+		boolean changed = false;
+		Iterator<ClientPlayer> iter = clients.iterator();
+
+		while (iter.hasNext()) {
+			ClientPlayer client = iter.next();
+
+			if (client.client == sender) {
+				changed = client.player.setDirection(dir.x, dir.y);
+				break;
+			}
+		}
+
+		if (changed) {
+			iter = clients.iterator();
+
+			while (iter.hasNext()) {
+				ClientPlayer client = iter.next();
+				boolean messageSent = client.client.sendDirection(sender.getClientName(), dir);
+
+				if (!messageSent) {
+					iter.remove();
+					log.log(Level.INFO, "Removed client " + client.client.getId());
+				}
+			}
+		}
+	}
+
+	protected void sendPositionSync(ServerThread sender, Point pos) {
+		Iterator<ClientPlayer> iter = clients.iterator();
+
+		while (iter.hasNext()) {
+			ClientPlayer client = iter.next();
+			boolean messageSent = client.client.sendPosition(sender.getClientName(), pos);
+
+			if (!messageSent) {
+				iter.remove();
+				log.log(Level.INFO, "Removed client " + client.client.getId());
 			}
 		}
 	}
@@ -168,12 +288,12 @@ public class Room implements AutoCloseable {
 
 		if (clientCount > 0) {
 			log.log(Level.INFO, "Sending " + clients.size() + " to lobby");
-			Iterator<ServerThread> iter = clients.iterator();
+			Iterator<ClientPlayer> iter = clients.iterator();
 			Room lobby = server.getLobby();
 
 			while (iter.hasNext()) {
-				ServerThread client = iter.next();
-				lobby.addClient(client);
+				ClientPlayer client = iter.next();
+				lobby.addClient(client.client);
 				iter.remove();
 			}
 
@@ -182,6 +302,77 @@ public class Room implements AutoCloseable {
 
 		server.cleanupRoom(this);
 		name = null;
+		isRunning = false;
+	}
+
+	@Override
+	public void awake() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void start() {
+		// TODO Auto-generated method stub
+
+		log.log(Level.INFO, getName() + " start called");
+	}
+
+	void checkPositionSync(ClientPlayer cp) {
+		if (frame % 120 == 0) {
+			if (cp.player.changedPosition()) {
+				sendPositionSync(cp.client, cp.player.getPosition());
+			}
+		}
+	}
+
+	@Override
+	public void update() {
+		// TODO Auto-generated method stub
+
+		Iterator<ClientPlayer> iter = clients.iterator();
+
+		while (iter.hasNext()) {
+			ClientPlayer p = iter.next();
+
+			if (p != null) {
+				p.player.move();
+				checkPositionSync(p);
+			}
+		}
+	}
+
+	private void nextFrame() {
+		if (Long.MAX_VALUE - 5 <= frame) {
+			frame = Long.MIN_VALUE;
+		}
+
+		frame++;
+	}
+
+	@Override
+	public void lateUpdate() {
+		// TODO Auto-generated method stub
+
+		nextFrame();
+	}
+
+	@Override
+	public void draw(Graphics g) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void quit() {
+		// TODO Auto-generated method stub
+
+		log.log(Level.WARNING, getName() + " quit() ");
+	}
+
+	@Override
+	public void attachListeners() {
+		// TODO Auto-generated method stub
 
 	}
 }
