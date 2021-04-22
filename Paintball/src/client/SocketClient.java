@@ -184,7 +184,7 @@ public enum SocketClient {
 	private void processPayload(Payload p) {
 		switch (p.getPayloadType()) {
 		case CONNECT:
-			sendOnClientConnect(p.getClientName(), p.getMessage());
+			receiveClientConnect(p.getClientName(), p.getMessage());
 			break;
 
 		case DISCONNECT:

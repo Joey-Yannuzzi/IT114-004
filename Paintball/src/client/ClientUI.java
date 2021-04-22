@@ -174,7 +174,8 @@ public class ClientUI extends JFrame implements Event {
 		game = new GamePanel();
 		game.setPreferredSize(new Dimension((int) (windowSize.width * .6), windowSize.height));
 		textArea.getParent().getParent().getParent().add(game, BorderLayout.WEST);
-		game.attachListeners();
+		SocketClient.INSTANCE.registerCallbackListener(game);
+		// game.attachListeners();
 	}
 
 	void addClient(String name) {

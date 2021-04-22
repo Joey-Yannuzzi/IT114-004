@@ -6,7 +6,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
-import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -14,7 +13,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.KeyStroke;
@@ -37,6 +35,7 @@ public class GamePanel extends BaseGamePanel implements Event {
 		}
 	}
 
+	@Override
 	public void attachListeners() {
 		InputMap im = this.getRootPane().getInputMap();
 		im.put(KeyStroke.getKeyStroke(KeyEvent.VK_W, 0, false), "up_pressed");
@@ -147,6 +146,8 @@ public class GamePanel extends BaseGamePanel implements Event {
 	}
 
 	private void applyControls() {
+		// System.out.println(myPlayer);
+
 		if (myPlayer != null) {
 			int x = 0, y = 0;
 
@@ -154,7 +155,9 @@ public class GamePanel extends BaseGamePanel implements Event {
 				y = -1;
 			} else if (KeyStates.S) {
 				y = 1;
-			} else if (!KeyStates.W && !KeyStates.S) {
+			}
+
+			if (!KeyStates.W && !KeyStates.S) {
 				y = 0;
 			}
 
@@ -162,7 +165,9 @@ public class GamePanel extends BaseGamePanel implements Event {
 				x = -1;
 			} else if (KeyStates.D) {
 				x = 1;
-			} else if (!KeyStates.A && !KeyStates.D) {
+			}
+
+			if (!KeyStates.A && !KeyStates.D) {
 				x = 0;
 			}
 
@@ -266,47 +271,4 @@ public class GamePanel extends BaseGamePanel implements Event {
 		}
 	}
 
-}
-
-class MoveAction extends AbstractAction {
-
-	private static final long serialVersionUID = 5137817329873449021L;
-	int key;
-	boolean pressed = false;
-
-	MoveAction(int k, boolean pressed) {
-		key = k;
-		this.pressed = pressed;
-	}
-
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
-		switch (key) {
-		case KeyEvent.VK_W:
-			KeyStates.W = pressed;
-			break;
-
-		case KeyEvent.VK_S:
-			KeyStates.S = pressed;
-			break;
-
-		case KeyEvent.VK_A:
-			KeyStates.A = pressed;
-			break;
-
-		case KeyEvent.VK_D:
-			KeyStates.D = pressed;
-			break;
-		}
-
-	}
-
-}
-
-class KeyStates {
-	public static boolean W = false;
-	public static boolean S = false;
-	public static boolean A = false;
-	public static boolean D = false;
 }
