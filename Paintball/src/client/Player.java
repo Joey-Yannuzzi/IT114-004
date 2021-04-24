@@ -11,7 +11,7 @@ import core.GameObject;
 public class Player extends GameObject implements Serializable {
 
 	private static final long serialVersionUID = -6088251166673414031L;
-	Color color = Color.RED;
+	Color color = Color.WHITE;
 	Point nameOffset = new Point(0, 5);
 
 	@Override
@@ -25,6 +25,11 @@ public class Player extends GameObject implements Serializable {
 		}
 
 		return true;
+	}
+
+	public void setColor(Color color) {
+		this.color = color;
+		this.setColor(this.color);
 	}
 
 	@Override
