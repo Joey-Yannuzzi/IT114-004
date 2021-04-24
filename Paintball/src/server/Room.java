@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 
 import client.Player;
 import core.BaseGamePanel;
+import core.Game;
 
 public class Room extends BaseGamePanel implements AutoCloseable {
 	private static SocketServer server;
@@ -19,9 +20,11 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 	private final static String COMMAND_TRIGGER = "/";
 	private final static String CREATE_ROOM = "createroom";
 	private final static String JOIN_ROOM = "joinroom";
+	private final static String CREATE_GAME = "creategame";
 	private List<ClientPlayer> clients = new ArrayList<ClientPlayer>();
 	static Dimension gameAreaSize = new Dimension(400, 600);
 	long frame = 0;
+	private Game game = new Game();
 
 	public Room(String name, boolean delayStart) {
 		super(delayStart);
@@ -196,6 +199,18 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 					roomName = comm2[1];
 					joinRoom(roomName, client);
 					wasCommand = true;
+					break;
+				case CREATE_GAME:
+					if (game.getActive() == true) {
+						System.out.println("Game already exists");
+						break;
+					} else if (this.getName().equalsIgnoreCase("lobby")) {
+						System.out.println("Cannot create game in the Lobby");
+						break;
+					}
+
+					game.createGame(clients);
+					System.out.println("Teams have been created");
 					break;
 				}
 			}
