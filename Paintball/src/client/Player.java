@@ -7,19 +7,20 @@ import java.awt.Point;
 import java.io.Serializable;
 
 import core.GameObject;
+import core.Projectile;
 
 public class Player extends GameObject implements Serializable {
 
 	private static final long serialVersionUID = -6088251166673414031L;
-	Color color = Color.WHITE;
 	Point nameOffset = new Point(0, 5);
+	int life = 3;
 
 	@Override
 	public boolean draw(Graphics g) {
 		if (super.draw(g)) {
 			g.setColor(color);
 			g.fillRect(position.x, position.y, size.width, size.height);
-			g.setColor(Color.WHITE);
+			g.setColor(Color.green.darker());
 			g.setFont(new Font("Monospaced", Font.PLAIN, 12));
 			g.drawString("Name: " + name, position.x + nameOffset.x, position.y + nameOffset.y);
 		}
@@ -27,14 +28,34 @@ public class Player extends GameObject implements Serializable {
 		return true;
 	}
 
-	public void setColor(Color color) {
-		this.color = color;
-		this.setColor(this.color);
-	}
-
 	@Override
 	public String toString() {
 		return String.format("Name: %s, p: (%d,%d), s: (%d, %d), d: (%d, %d), isAcitve: %s", name, position.x,
 				position.y, speed.x, speed.y, direction.x, direction.y, isActive);
+	}
+
+	public int getLife() {
+		return (this.life);
+	}
+
+	private boolean reduceLife() {
+		this.life = -1;
+
+		if (this.life < 1) {
+			isActive = false;
+		}
+
+		return (isActive);
+	}
+
+	public boolean onHit(Projectile p, Graphics g) {
+		if (this.getColor() == p.getColor()) {
+			p.hide(g);
+			return false;
+		}
+
+		this.reduceLife();
+		p.hide(g);
+		return true;
 	}
 }

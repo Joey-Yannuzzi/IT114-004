@@ -12,6 +12,8 @@ import java.util.logging.Logger;
 import client.Player;
 import core.BaseGamePanel;
 import core.Game;
+import core.GameState;
+import core.GameStateType;
 
 public class Room extends BaseGamePanel implements AutoCloseable {
 	private static SocketServer server;
@@ -25,6 +27,7 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 	static Dimension gameAreaSize = new Dimension(400, 600);
 	long frame = 0;
 	private Game game = new Game();
+	private GameState gameState = new GameState(GameStateType.LOBBY);
 
 	public Room(String name, boolean delayStart) {
 		super(delayStart);
@@ -201,6 +204,8 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 					wasCommand = true;
 					break;
 				case CREATE_GAME:
+					wasCommand = true;
+
 					if (game.getActive() == true) {
 						System.out.println("Game already exists");
 						break;
@@ -209,8 +214,8 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 						break;
 					}
 
-					game.createGame(clients);
-					System.out.println("Teams have been created");
+					gameState.setGameStateType(GameStateType.GAME);
+					sendGameState(gameState);
 					break;
 				}
 			}
@@ -294,6 +299,21 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 				iter.remove();
 				log.log(Level.INFO, "Removed client " + client.client.getId());
 			}
+		}
+	}
+
+	protected void sendGameState(GameState gameState) {
+		switch (gameState.getGameStateType()) {
+		case LOBBY:
+			break;
+
+		case GAME:
+			game.createGame(clients);
+			System.out.println("Teams have been created");
+			break;
+
+		case END:
+			break;
 		}
 	}
 

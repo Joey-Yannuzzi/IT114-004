@@ -20,6 +20,11 @@ public class MoveAction extends AbstractAction {
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
 		switch (key) {
+
+		case KeyEvent.VK_SPACE:
+			KeyStates.SPACE = pressed;
+			break;
+
 		case KeyEvent.VK_W:
 			KeyStates.W = pressed;
 			break;

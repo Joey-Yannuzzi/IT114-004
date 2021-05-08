@@ -22,11 +22,6 @@ public class Team {
 		this.teammates = teammates;
 		this.teamSize = this.teammates.size();
 		this.teamColor = teamColor;
-
-		/*
-		 * for (int i = 0; i < teamSize; i++) {
-		 * teammates.get(i).player.setColor(this.teamColor); }
-		 */
 	}
 
 	public Color getTeamColor() {

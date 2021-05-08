@@ -18,6 +18,7 @@ import javax.swing.InputMap;
 import javax.swing.KeyStroke;
 
 import core.BaseGamePanel;
+import core.Projectile;
 
 public class GamePanel extends BaseGamePanel implements Event {
 
@@ -26,6 +27,8 @@ public class GamePanel extends BaseGamePanel implements Event {
 	Player myPlayer;
 	String playerUsername;
 	private final static Logger log = Logger.getLogger(GamePanel.class.getName());
+	List<Projectile> projectiles;
+	private Projectile myProjectile;
 
 	public void setPlayerName(String name) {
 		playerUsername = name;
@@ -46,6 +49,8 @@ public class GamePanel extends BaseGamePanel implements Event {
 		im.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, 0, true), "left_released");
 		im.put(KeyStroke.getKeyStroke(KeyEvent.VK_D, 0, false), "right_pressed");
 		im.put(KeyStroke.getKeyStroke(KeyEvent.VK_D, 0, true), "right_released");
+		im.put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0, false), "space_pressed");
+		im.put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0, true), "space_released");
 		ActionMap am = this.getRootPane().getActionMap();
 		am.put("up_pressed", new MoveAction(KeyEvent.VK_W, true));
 		am.put("up_released", new MoveAction(KeyEvent.VK_W, false));
@@ -55,6 +60,8 @@ public class GamePanel extends BaseGamePanel implements Event {
 		am.put("left_released", new MoveAction(KeyEvent.VK_A, false));
 		am.put("right_pressed", new MoveAction(KeyEvent.VK_D, true));
 		am.put("right_released", new MoveAction(KeyEvent.VK_D, false));
+		am.put("space_pressed", new MoveAction(KeyEvent.VK_SPACE, true));
+		am.put("space_released", new MoveAction(KeyEvent.VK_SPACE, false));
 	}
 
 	@Override
@@ -145,6 +152,7 @@ public class GamePanel extends BaseGamePanel implements Event {
 
 		applyControls();
 		localMovePlayers();
+		localMoveProjectiles();
 	}
 
 	private void applyControls() {
@@ -173,6 +181,11 @@ public class GamePanel extends BaseGamePanel implements Event {
 				x = 0;
 			}
 
+			if (KeyStates.SPACE && myProjectile.getShoot()) {
+				myProjectile = new Projectile(myPlayer.getColor(), myPlayer.getPosition(), myPlayer.getDirection());
+				projectiles.add(myProjectile);
+			}
+
 			boolean changed = myPlayer.setDirection(x, y);
 
 			if (changed) {
@@ -187,6 +200,18 @@ public class GamePanel extends BaseGamePanel implements Event {
 
 		while (iter.hasNext()) {
 			Player p = iter.next();
+
+			if (p != null) {
+				p.move();
+			}
+		}
+	}
+
+	private void localMoveProjectiles() {
+		Iterator<Projectile> iter = projectiles.iterator();
+
+		while (iter.hasNext()) {
+			Projectile p = iter.next();
 
 			if (p != null) {
 				p.move();
