@@ -2,8 +2,10 @@ package core;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.Timer;
 
 import server.ClientPlayer;
 
@@ -12,6 +14,7 @@ public class Game {
 	private boolean isActive = false;
 	private Team redTeam;
 	private Team blueTeam;
+	private List<Projectile> projectiles;
 
 	public Game() {
 		this.setActive(false);
@@ -57,5 +60,60 @@ public class Game {
 		}
 
 		blueTeam = new Team(team2, Color.BLUE);
+	}
+
+	private void createTimer() {
+		boolean daemon = true;
+		Timer time = new Timer(daemon);
+	}
+
+	public boolean addProjectile(Projectile projectile) {
+		Iterator<Projectile> iter = projectiles.iterator();
+
+		while (iter.hasNext()) {
+			Projectile p = iter.next();
+
+			if (p == projectile) {
+				return (false);
+			}
+		}
+
+		projectiles.add(projectile);
+		return (true);
+	}
+
+	public boolean removeProjectile(Projectile projectile) {
+		Iterator<Projectile> iter = projectiles.iterator();
+
+		while (iter.hasNext()) {
+			Projectile p = iter.next();
+
+			if (p == projectile) {
+				projectiles.remove(projectile);
+				return (true);
+			}
+		}
+
+		return (false);
+	}
+
+	public void shootProjectile(Projectile projectile) {
+		Iterator<Projectile> iter = projectiles.iterator();
+		boolean exists = false;
+
+		while (iter.hasNext()) {
+			Projectile p = iter.next();
+
+			if (p == projectile) {
+				exists = true;
+				break;
+			}
+		}
+
+		if (!exists) {
+			addProjectile(projectile);
+		}
+
+		projectile.move();
 	}
 }

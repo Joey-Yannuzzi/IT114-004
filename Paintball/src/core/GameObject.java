@@ -1,5 +1,6 @@
 package core;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
@@ -14,6 +15,7 @@ public abstract class GameObject {
 	protected Dimension size = new Dimension(50, 50);
 	protected String name = "";
 	protected boolean isActive = true;
+	protected Color color = Color.WHITE;
 
 	public void setSpeed(int x, int y) {
 		if (x > -1) {
@@ -23,6 +25,14 @@ public abstract class GameObject {
 		if (y > -1) {
 			speed.y = y;
 		}
+	}
+
+	public void setColor(Color color) {
+		this.color = color;
+	}
+
+	public Color getColor() {
+		return (this.color);
 	}
 
 	public void setSize(int width, int height) {
@@ -40,6 +50,10 @@ public abstract class GameObject {
 
 	public void setActive(boolean isActive) {
 		this.isActive = isActive;
+	}
+
+	public boolean getActive() {
+		return (isActive);
 	}
 
 	public boolean isActive() {
@@ -100,5 +114,11 @@ public abstract class GameObject {
 		}
 
 		return true;
+	}
+
+	public void hide(Graphics g) {
+		if (!isActive) {
+			g.setColor(Color.BLACK);
+		}
 	}
 }

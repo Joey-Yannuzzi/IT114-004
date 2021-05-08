@@ -98,12 +98,6 @@ public class ServerThread extends Thread {
 		return (sendPayload(payload));
 	}
 
-	protected boolean sendTeam() {
-		Payload payload = new Payload();
-		payload.setPayloadType(PayloadType.TEAM);
-		return (sendPayload(payload));
-	}
-
 	private boolean sendPayload(Payload p) {
 		try {
 			out.writeObject(p);
