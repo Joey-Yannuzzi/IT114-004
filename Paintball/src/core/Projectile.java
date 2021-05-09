@@ -13,10 +13,12 @@ public class Projectile extends GameObject {
 	private boolean isShoot = false;
 
 	public Projectile(Color teamColor, Point position, Point direction) {
-		this.color = Color.RED;
+		this.color = teamColor;
 		this.position = position;
 		this.direction = direction;
 		setShoot(true);
+		isActive = true;
+		// System.out.println(speed);
 	}
 
 	@Override
@@ -35,5 +37,12 @@ public class Projectile extends GameObject {
 
 	public void setShoot(boolean isShoot) {
 		this.isShoot = isShoot;
+	}
+
+	public void shootProjectile(Projectile projectile) {
+		if (!getShoot()) {
+			return;
+		}
+
 	}
 }

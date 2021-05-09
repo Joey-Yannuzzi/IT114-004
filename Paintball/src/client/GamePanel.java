@@ -28,6 +28,8 @@ public class GamePanel extends BaseGamePanel implements Event {
 	String playerUsername;
 	private final static Logger log = Logger.getLogger(GamePanel.class.getName());
 	List<Projectile> projectiles;
+	// Point direction = new Point(1, 0);
+	// Point position = new Point(50, 50);
 	private Projectile myProjectile;
 
 	public void setPlayerName(String name) {
@@ -139,6 +141,7 @@ public class GamePanel extends BaseGamePanel implements Event {
 		// TODO Auto-generated method stub
 
 		players = new ArrayList<Player>();
+		projectiles = new ArrayList<Projectile>();
 	}
 
 	@Override
@@ -153,6 +156,7 @@ public class GamePanel extends BaseGamePanel implements Event {
 		applyControls();
 		localMovePlayers();
 		localMoveProjectiles();
+
 	}
 
 	private void applyControls() {
@@ -181,9 +185,12 @@ public class GamePanel extends BaseGamePanel implements Event {
 				x = 0;
 			}
 
-			if (KeyStates.SPACE && myProjectile.getShoot()) {
-				myProjectile = new Projectile(myPlayer.getColor(), myPlayer.getPosition(), myPlayer.getDirection());
+			if (KeyStates.SPACE) {
+				Point direction = new Point(1, 0);
+				Point position = new Point(50, 50);
+				myProjectile = new Projectile(Color.WHITE, position, direction);
 				projectiles.add(myProjectile);
+				System.out.println("Projectile created");
 			}
 
 			boolean changed = myPlayer.setDirection(x, y);
@@ -192,6 +199,7 @@ public class GamePanel extends BaseGamePanel implements Event {
 				System.out.println("Direction changed");
 				SocketClient.INSTANCE.syncDirection(new Point(x, y));
 			}
+
 		}
 	}
 
@@ -215,6 +223,9 @@ public class GamePanel extends BaseGamePanel implements Event {
 
 			if (p != null) {
 				p.move();
+				System.out.println("Direction: " + p.getDirection());
+				System.out.println("Position: " + p.getPosition());
+				System.out.println("Moving Projectile");
 			}
 		}
 	}
@@ -222,7 +233,6 @@ public class GamePanel extends BaseGamePanel implements Event {
 	@Override
 	public void lateUpdate() {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -233,6 +243,7 @@ public class GamePanel extends BaseGamePanel implements Event {
 		((Graphics2D) g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		drawPlayers(g);
 		drawText(g);
+		drawProjectiles(g);
 	}
 
 	private synchronized void drawPlayers(Graphics g) {
@@ -242,6 +253,18 @@ public class GamePanel extends BaseGamePanel implements Event {
 
 		while (iter.hasNext()) {
 			Player p = iter.next();
+
+			if (p != null) {
+				p.draw(g);
+			}
+		}
+	}
+
+	private synchronized void drawProjectiles(Graphics g) {
+		Iterator<Projectile> iter = projectiles.iterator();
+
+		while (iter.hasNext()) {
+			Projectile p = iter.next();
 
 			if (p != null) {
 				p.draw(g);
