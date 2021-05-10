@@ -1,6 +1,7 @@
 package client;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -31,6 +32,8 @@ public class GamePanel extends BaseGamePanel implements Event {
 	// Point direction = new Point(1, 0);
 	// Point position = new Point(50, 50);
 	private Projectile myProjectile;
+	private Dimension projectileSize = new Dimension(25, 25);
+	private Point defaultDirection = new Point(1, 0);
 
 	public void setPlayerName(String name) {
 		playerUsername = name;
@@ -161,6 +164,7 @@ public class GamePanel extends BaseGamePanel implements Event {
 
 	private void applyControls() {
 		// System.out.println(myPlayer);
+		boolean d = false;
 
 		if (myPlayer != null) {
 			int x = 0, y = 0;
@@ -185,15 +189,27 @@ public class GamePanel extends BaseGamePanel implements Event {
 				x = 0;
 			}
 
-			if (KeyStates.SPACE) {
-				Point direction = new Point(1, 0);
-				Point position = new Point(50, 50);
-				myProjectile = new Projectile(Color.WHITE, position, direction);
-				projectiles.add(myProjectile);
-				System.out.println("Projectile created");
+			if (x != 0 || y != 0) {
+				defaultDirection.x = x;
+				defaultDirection.y = y;
+			}
+
+			if (x == 0 && y == 0) {
+				d = true;
 			}
 
 			boolean changed = myPlayer.setDirection(x, y);
+
+			if (KeyStates.SPACE) {
+				if (d) {
+					myProjectile = new Projectile(myPlayer.getColor(), myPlayer.getPosition(), defaultDirection,
+							projectileSize);
+				} else {
+					myProjectile = new Projectile(myPlayer.getColor(), myPlayer.getPosition(), myPlayer.getDirection(),
+							projectileSize);
+				}
+				projectiles.add(myProjectile);
+			}
 
 			if (changed) {
 				System.out.println("Direction changed");
