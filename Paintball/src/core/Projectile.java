@@ -7,16 +7,19 @@ import java.awt.Point;
 
 public class Projectile extends GameObject {
 
-	private Dimension size = new Dimension(25, 25);
-	private Point speed = new Point(5, 5);
-	private Point position;
+	// private Dimension size = new Dimension(25, 25);
+	// private Point speed = new Point(5, 5);
+	// private Point position;
 	private boolean isShoot = false;
 
-	public Projectile(Color teamColor, Point position, Point direction) {
-		this.color = Color.RED;
-		this.position = position;
-		this.direction = direction;
+	public Projectile(Color teamColor, Point position, Point direction, Dimension size) {
+		this.color = teamColor;
+		this.setPosition(position);
+		this.setDirection(direction.x, direction.y);
+		this.setSize(size);
 		setShoot(true);
+		isActive = true;
+		// System.out.println(speed);
 	}
 
 	@Override
@@ -35,5 +38,12 @@ public class Projectile extends GameObject {
 
 	public void setShoot(boolean isShoot) {
 		this.isShoot = isShoot;
+	}
+
+	public void shootProjectile(Projectile projectile) {
+		if (!getShoot()) {
+			return;
+		}
+
 	}
 }

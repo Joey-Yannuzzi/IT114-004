@@ -93,6 +93,10 @@ public abstract class GameObject {
 		return direction;
 	}
 
+	public void setSize(Dimension size) {
+		this.size = size;
+	}
+
 	public void setPosition(Point position) {
 		previousPosition.x = position.x;
 		previousPosition.y = position.y;
