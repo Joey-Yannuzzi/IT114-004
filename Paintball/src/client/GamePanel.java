@@ -239,9 +239,9 @@ public class GamePanel extends BaseGamePanel implements Event {
 
 			if (p != null) {
 				p.move();
-				System.out.println("Direction: " + p.getDirection());
-				System.out.println("Position: " + p.getPosition());
-				System.out.println("Moving Projectile");
+				// System.out.println("Direction: " + p.getDirection());
+				// System.out.println("Position: " + p.getPosition());
+				// System.out.println("Moving Projectile");
 			}
 		}
 	}

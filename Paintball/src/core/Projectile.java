@@ -17,6 +17,7 @@ public class Projectile extends GameObject {
 		this.setPosition(position);
 		this.setDirection(direction.x, direction.y);
 		this.setSize(size);
+		this.setSpeed(10, 10);
 		setShoot(true);
 		isActive = true;
 		// System.out.println(speed);
@@ -26,7 +27,7 @@ public class Projectile extends GameObject {
 	public boolean draw(Graphics g) {
 		if (super.draw(g)) {
 			g.setColor(color);
-			g.fillRect(position.x, position.y, size.width, size.height);
+			g.fillOval(position.x, position.y, size.width, size.height);
 		}
 
 		return true;
