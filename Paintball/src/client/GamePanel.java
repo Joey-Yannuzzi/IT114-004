@@ -28,6 +28,7 @@ public class GamePanel extends BaseGamePanel implements Event {
 	Player myPlayer;
 	String playerUsername;
 	private final static Logger log = Logger.getLogger(GamePanel.class.getName());
+	private Dimension gameAreaSize = new Dimension(700, 600);
 	List<Projectile> projectiles;
 	// Point direction = new Point(1, 0);
 	// Point position = new Point(50, 50);
@@ -159,6 +160,7 @@ public class GamePanel extends BaseGamePanel implements Event {
 		applyControls();
 		localMovePlayers();
 		localMoveProjectiles();
+		checkProjectilePosition();
 
 	}
 
@@ -201,14 +203,17 @@ public class GamePanel extends BaseGamePanel implements Event {
 			boolean changed = myPlayer.setDirection(x, y);
 
 			if (KeyStates.SPACE) {
+				System.out.println("Position: " + myPlayer.getPosition());
+
 				if (d) {
-					myProjectile = new Projectile(myPlayer.getColor(), myPlayer.getPosition(), defaultDirection,
-							projectileSize);
+					SocketClient.INSTANCE.spawnProjectile(playerUsername, defaultDirection);
+					// myProjectile = new Projectile(myPlayer.getColor(), myPlayer.getPosition(),
+					// defaultDirection, projectileSize);
 				} else {
-					myProjectile = new Projectile(myPlayer.getColor(), myPlayer.getPosition(), myPlayer.getDirection(),
-							projectileSize);
+					SocketClient.INSTANCE.spawnProjectile(playerUsername, myPlayer.getDirection());
+					// myProjectile = new Projectile(myPlayer.getColor(), myPlayer.getPosition(),
+					// myPlayer.getDirection(), projectileSize);
 				}
-				projectiles.add(myProjectile);
 			}
 
 			if (changed) {
@@ -242,6 +247,25 @@ public class GamePanel extends BaseGamePanel implements Event {
 				// System.out.println("Direction: " + p.getDirection());
 				// System.out.println("Position: " + p.getPosition());
 				// System.out.println("Moving Projectile");
+			}
+		}
+	}
+
+	private synchronized void checkProjectilePosition() {
+		Iterator<Projectile> iter = projectiles.iterator();
+		Point lowerBounds = new Point(0, 0);
+		Point upperBounds = new Point(gameAreaSize.width, gameAreaSize.height);
+
+		while (iter.hasNext()) {
+			Projectile p = iter.next();
+
+			if (p != null) {
+				if (p.getPosition().x <= lowerBounds.x || p.getPosition().x >= upperBounds.x
+						|| p.getPosition().y <= lowerBounds.y || p.getPosition().y >= upperBounds.y) {
+					iter.remove();
+					projectiles.remove(p);
+					System.out.println("Deleted Projectile");
+				}
 			}
 		}
 	}
@@ -333,6 +357,21 @@ public class GamePanel extends BaseGamePanel implements Event {
 				System.out.println(clientName + " set " + position);
 				p.setPosition(position);
 				break;
+			}
+		}
+	}
+
+	@Override
+	public synchronized void onSpawnProjectile(String name, Point direction) {
+		// TODO Auto-generated method stub
+		Iterator<Player> iter = players.iterator();
+
+		while (iter.hasNext()) {
+			Player p = iter.next();
+
+			if (p != null && p.getName().equalsIgnoreCase(name)) {
+				Projectile projectile = new Projectile(Color.RED, p.getPosition(), direction);
+				projectiles.add(projectile);
 			}
 		}
 	}

@@ -1,7 +1,6 @@
 package core;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
 
@@ -12,11 +11,11 @@ public class Projectile extends GameObject {
 	// private Point position;
 	private boolean isShoot = false;
 
-	public Projectile(Color teamColor, Point position, Point direction, Dimension size) {
+	public Projectile(Color teamColor, Point position, Point direction) {
 		this.color = teamColor;
 		this.setPosition(position);
 		this.setDirection(direction.x, direction.y);
-		this.setSize(size);
+		this.setSize(25, 25);
 		this.setSpeed(10, 10);
 		setShoot(true);
 		isActive = true;

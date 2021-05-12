@@ -314,4 +314,10 @@ public class ClientUI extends JFrame implements Event {
 		// TODO Auto-generated method stub
 
 	}
+
+	@Override
+	public void onSpawnProjectile(String name, Point direction) {
+		// TODO Auto-generated method stub
+
+	}
 }
