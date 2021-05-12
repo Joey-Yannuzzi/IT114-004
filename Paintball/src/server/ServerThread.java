@@ -77,6 +77,14 @@ public class ServerThread extends Thread {
 		return sendPayload(payload);
 	}
 
+	protected boolean sendProjectileSpawn(ServerThread client, Point direction) {
+		Payload payload = new Payload();
+		payload.setPayloadType(PayloadType.PROJECTILE);
+		payload.setClientName(client.getClientName());
+		payload.setPoint(direction);
+		return (sendPayload(payload));
+	}
+
 	protected boolean sendConnectionStatus(String clientName, boolean isConnect, String message) {
 		Payload payload = new Payload();
 
@@ -143,6 +151,12 @@ public class ServerThread extends Thread {
 			break;
 
 		case SYNC_POSITION:
+			currentRoom.sendPositionSync(this, p.getPoint());
+			break;
+
+		case PROJECTILE:
+			// System.out.println("Position: " + p.getPosition());
+			currentRoom.sendCreateProjectile(this, p.getPoint());
 			break;
 
 		default:

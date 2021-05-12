@@ -181,6 +181,27 @@ public enum SocketClient {
 		}
 	}
 
+	private void sendSpawnProjectile(String name, Point direction) {
+		Iterator<Event> iter = events.iterator();
+
+		while (iter.hasNext()) {
+			Event e = iter.next();
+
+			if (e != null) {
+				e.onSpawnProjectile(name, direction);
+			}
+		}
+	}
+
+	protected void spawnProjectile(String name, Point direction) {
+		// System.out.println("Position: " + position);
+		Payload p = new Payload();
+		p.setPayloadType(PayloadType.PROJECTILE);
+		p.setPoint(direction);
+		p.setClientName(name);
+		sendPayload(p);
+	}
+
 	private void processPayload(Payload p) {
 		switch (p.getPayloadType()) {
 		case CONNECT:
@@ -207,6 +228,10 @@ public enum SocketClient {
 			sendSyncPosition(p.getClientName(), p.getPoint());
 			break;
 
+		case PROJECTILE:
+			sendSpawnProjectile(p.getClientName(), p.getPoint());
+			break;
+
 		default:
 			log.log(Level.WARNING, "unhandled payload on client" + p);
 			break;
@@ -229,9 +254,11 @@ public enum SocketClient {
 		sendPayload(p);
 	}
 
-	@Deprecated
-	public void syncPosition() {
-		log.log(Level.SEVERE, "My sample doesn't use this");
+	public void syncPosition(Point position) {
+		Payload p = new Payload();
+		p.setPayloadType(PayloadType.SYNC_POSITION);
+		p.setPoint(position);
+		sendPayload(p);
 	}
 
 	public boolean connectAndStart(String address, String port) throws IOException {

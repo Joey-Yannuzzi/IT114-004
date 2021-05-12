@@ -1,5 +1,6 @@
 package server;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
@@ -14,6 +15,7 @@ import core.BaseGamePanel;
 import core.Game;
 import core.GameState;
 import core.GameStateType;
+import core.Projectile;
 
 public class Room extends BaseGamePanel implements AutoCloseable {
 	private static SocketServer server;
@@ -24,10 +26,11 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 	private final static String JOIN_ROOM = "joinroom";
 	private final static String CREATE_GAME = "creategame";
 	private List<ClientPlayer> clients = new ArrayList<ClientPlayer>();
-	static Dimension gameAreaSize = new Dimension(400, 600);
+	static Dimension gameAreaSize = new Dimension(700, 600);
 	long frame = 0;
 	private Game game = new Game();
 	private GameState gameState = new GameState(GameStateType.LOBBY);
+	private List<Projectile> projectiles = new ArrayList<Projectile>();
 
 	public Room(String name, boolean delayStart) {
 		super(delayStart);
@@ -302,6 +305,38 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 		}
 	}
 
+	protected void sendCreateProjectile(ServerThread player, Point direction) {
+		createProjectile(player, direction);
+		// System.out.println("Position: " + position);
+		Iterator<ClientPlayer> iter = clients.iterator();
+
+		while (iter.hasNext()) {
+			ClientPlayer c = iter.next();
+			boolean messageSent = c.client.sendProjectileSpawn(player, direction);
+
+			if (!messageSent) {
+				iter.remove();
+				log.log(Level.INFO, "Removed client " + c.client.getId());
+			}
+		}
+	}
+
+	private void createProjectile(ServerThread player, Point direction) {
+		// TODO Auto-generated method stub
+		Iterator<ClientPlayer> iter = clients.iterator();
+
+		while (iter.hasNext()) {
+			ClientPlayer c = iter.next();
+
+			if (c.client.getClientName().equalsIgnoreCase(player.getClientName()))
+				;
+			{
+				Projectile p = new Projectile(Color.RED, c.player.getPosition(), direction);
+				projectiles.add(p);
+			}
+		}
+	}
+
 	protected void sendGameState(GameState gameState) {
 		switch (gameState.getGameStateType()) {
 		case LOBBY:
@@ -375,6 +410,40 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 				checkPositionSync(p);
 			}
 		}
+
+		moveProjectiles();
+		checkProjectilePosition();
+	}
+
+	private void moveProjectiles() {
+		Iterator<Projectile> iter = projectiles.iterator();
+
+		while (iter.hasNext()) {
+			Projectile p = iter.next();
+
+			if (p != null) {
+				p.move();
+			}
+		}
+	}
+
+	private synchronized void checkProjectilePosition() {
+		Iterator<Projectile> iter = projectiles.iterator();
+		Point lowerBounds = new Point(0, 0);
+		Point upperBounds = new Point(gameAreaSize.width, gameAreaSize.height);
+
+		while (iter.hasNext()) {
+			Projectile p = iter.next();
+
+			if (p != null) {
+				if (p.getPosition().x <= lowerBounds.x || p.getPosition().x >= upperBounds.x
+						|| p.getPosition().y <= lowerBounds.y || p.getPosition().y >= upperBounds.y) {
+					iter.remove();
+					projectiles.remove(p);
+					System.out.println("Deleted Projectile");
+				}
+			}
+		}
 	}
 
 	private void nextFrame() {
@@ -388,7 +457,6 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 	@Override
 	public void lateUpdate() {
 		// TODO Auto-generated method stub
-
 		nextFrame();
 	}
 

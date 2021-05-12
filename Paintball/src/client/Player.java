@@ -48,14 +48,14 @@ public class Player extends GameObject implements Serializable {
 		return (isActive);
 	}
 
-	public boolean onHit(Projectile p, Graphics g) {
+	public boolean onHit(Projectile p) {
 		if (this.getColor() == p.getColor()) {
-			p.hide(g);
+			// p.hide(g);
 			return false;
 		}
 
 		this.reduceLife();
-		p.hide(g);
+		// p.hide(g);
 		return true;
 	}
 }
