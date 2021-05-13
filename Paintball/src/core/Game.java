@@ -15,13 +15,11 @@ public class Game {
 	private Team redTeam;
 	private Team blueTeam;
 	private List<Projectile> projectiles;
+	private GameState gameState;
 
 	public Game() {
 		this.setActive(false);
-	}
-
-	public boolean isActive() {
-		return isActive;
+		this.setGameState(GameState.LOBBY);
 	}
 
 	public void setActive(boolean isActive) {
@@ -30,6 +28,14 @@ public class Game {
 
 	public boolean getActive() {
 		return (isActive);
+	}
+
+	public void setGameState(GameState gameState) {
+		this.gameState = gameState;
+	}
+
+	public GameState getGameState() {
+		return (gameState);
 	}
 
 	public void createGame(List<ClientPlayer> clients) {
