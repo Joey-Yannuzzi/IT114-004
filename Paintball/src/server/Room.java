@@ -14,7 +14,6 @@ import client.Player;
 import core.BaseGamePanel;
 import core.Game;
 import core.GameState;
-import core.GameStateType;
 import core.Projectile;
 
 public class Room extends BaseGamePanel implements AutoCloseable {
@@ -28,8 +27,7 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 	private List<ClientPlayer> clients = new ArrayList<ClientPlayer>();
 	static Dimension gameAreaSize = new Dimension(700, 600);
 	long frame = 0;
-	private Game game = new Game();
-	private GameState gameState = new GameState(GameStateType.LOBBY);
+	private Game game;
 	private List<Projectile> projectiles = new ArrayList<Projectile>();
 
 	public Room(String name, boolean delayStart) {
@@ -217,8 +215,8 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 						break;
 					}
 
-					gameState.setGameStateType(GameStateType.GAME);
-					sendGameState(gameState);
+					game.setGameState(GameState.GAME);
+					sendGameState(game.getGameState());
 					break;
 				}
 			}
@@ -338,7 +336,7 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 	}
 
 	protected void sendGameState(GameState gameState) {
-		switch (gameState.getGameStateType()) {
+		switch (gameState) {
 		case LOBBY:
 			break;
 
@@ -379,6 +377,7 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 	public void awake() {
 		// TODO Auto-generated method stub
 
+		game = new Game();
 	}
 
 	@Override
