@@ -21,5 +21,9 @@ public interface Event {
 
 	void onGameStart();
 
+	void onGameEnd();
+
 	void onSendTeammates(Game game);
+
+	void onSetCountdown(String message, int duration);
 }

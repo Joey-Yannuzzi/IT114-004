@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 
 import client.Player;
 import core.BaseGamePanel;
+import core.Countdown;
 import core.Game;
 import core.GameState;
 import core.Projectile;
@@ -29,6 +30,7 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 	long frame = 0;
 	private Game game;
 	private List<Projectile> projectiles = new ArrayList<Projectile>();
+	private Countdown timer;
 
 	public Room(String name, boolean delayStart) {
 		super(delayStart);
@@ -332,7 +334,7 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 		}
 	}
 
-	private void sendTeams(Game game) {
+	protected void sendTeams(Game game) {
 		Iterator<ClientPlayer> iter = clients.iterator();
 
 		while (iter.hasNext()) {
@@ -342,6 +344,32 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 			if (!messageSent) {
 				iter.remove();
 				log.log(Level.INFO, "Removed client " + player.client.getId());
+			}
+		}
+	}
+
+	protected void sendCountdown(String message, int duration) {
+		Iterator<ClientPlayer> iter = clients.iterator();
+
+		while (iter.hasNext()) {
+			ClientPlayer player = iter.next();
+			boolean messageSent = player.client.sendCountdown(message, duration);
+
+			if (!messageSent) {
+				iter.remove();
+			}
+		}
+	}
+
+	protected void sendEndGame() {
+		Iterator<ClientPlayer> iter = clients.iterator();
+
+		while (iter.hasNext()) {
+			ClientPlayer player = iter.next();
+			boolean messageSent = player.client.sendEndGame();
+
+			if (!messageSent) {
+				iter.remove();
 			}
 		}
 	}
@@ -411,7 +439,7 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 	@Override
 	public void start() {
 		// TODO Auto-generated method stub
-
+		timer = new Countdown("Test", 60);
 		log.log(Level.INFO, getName() + " start called");
 	}
 
@@ -426,7 +454,12 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 	@Override
 	public void update() {
 		// TODO Auto-generated method stub
+		movePlayers();
+		moveProjectiles();
+		checkProjectilePosition();
+	}
 
+	private synchronized void movePlayers() {
 		Iterator<ClientPlayer> iter = clients.iterator();
 
 		while (iter.hasNext()) {
@@ -437,9 +470,6 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 				checkPositionSync(p);
 			}
 		}
-
-		moveProjectiles();
-		checkProjectilePosition();
 	}
 
 	private void moveProjectiles() {
@@ -467,9 +497,16 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 						|| p.getPosition().y <= lowerBounds.y || p.getPosition().y >= upperBounds.y) {
 					iter.remove();
 					projectiles.remove(p);
-					System.out.println("Deleted Projectile");
+					// System.out.println("Deleted Projectile");
 				}
 			}
+		}
+	}
+
+	private void checkCountdown() {
+		if (timer.getTime() < 1) {
+			this.isRunning = false;
+			sendEndGame();
 		}
 	}
 
@@ -484,6 +521,7 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 	@Override
 	public void lateUpdate() {
 		// TODO Auto-generated method stub
+		checkCountdown();
 		nextFrame();
 	}
 
@@ -496,7 +534,7 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 	@Override
 	public void quit() {
 		// TODO Auto-generated method stub
-
+		this.setLoop(null);
 		log.log(Level.WARNING, getName() + " quit() ");
 	}
 

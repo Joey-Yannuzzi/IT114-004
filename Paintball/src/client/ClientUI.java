@@ -198,6 +198,8 @@ public class ClientUI extends JFrame implements Event {
 		game = new GamePanel(delay);
 		game.setPreferredSize(new Dimension((int) (windowSize.width * .6), windowSize.height));
 		textArea.getParent().getParent().getParent().add(game, BorderLayout.WEST);
+		game.setVisible(false);
+		game.setClient(self);
 		SocketClient.INSTANCE.registerCallbackListener(game);
 		// game.attachListeners();
 	}
@@ -364,6 +366,7 @@ public class ClientUI extends JFrame implements Event {
 		text.setVisible(false);
 		button.setVisible(false);
 		userPanel.setVisible(false);
+		game.setVisible(true);
 		game.setDelay(false);
 		game.getRootPane().grabFocus();
 	}
@@ -372,5 +375,20 @@ public class ClientUI extends JFrame implements Event {
 	public void onSendTeammates(Game game) {
 		// TODO Auto-generated method stub
 		createTeamPanelList();
+	}
+
+	@Override
+	public void onSetCountdown(String message, int duration) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onGameEnd() {
+		// TODO Auto-generated method stub
+		game.setVisible(false);
+		text.setVisible(true);
+		button.setVisible(true);
+		userPanel.setVisible(true);
 	}
 }
