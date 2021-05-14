@@ -2,7 +2,7 @@ package client;
 
 import java.awt.Point;
 
-import core.Game;
+import core.Team;
 
 public interface Event {
 	void onClientConnect(String clientName, String message);
@@ -23,7 +23,15 @@ public interface Event {
 
 	void onGameEnd();
 
-	void onSendTeammates(Game game);
+	// void onSendTeammates(Game game);
 
 	void onSetCountdown(String message, int duration);
+
+	void onSendTeams(Team redTeam, Team blueTeam);
+
+	void onDeathReport(String name);
+
+	void onGlobalDeath(String name, String message);
+
+	void onHitReport(String name);
 }

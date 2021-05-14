@@ -30,7 +30,9 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
 
-import core.Game;
+import core.Team;
+
+//import core.Game;
 
 public class ClientUI extends JFrame implements Event {
 
@@ -41,6 +43,7 @@ public class ClientUI extends JFrame implements Event {
 	private final static Logger log = Logger.getLogger(ClientUI.class.getName());
 	JPanel userPanel;
 	JPanel teamPanel;
+	JPanel timerPanel;
 	JTextField text;
 	JButton button;
 	List<User> users = new ArrayList<User>();
@@ -371,11 +374,10 @@ public class ClientUI extends JFrame implements Event {
 		game.getRootPane().grabFocus();
 	}
 
-	@Override
-	public void onSendTeammates(Game game) {
-		// TODO Auto-generated method stub
-		createTeamPanelList();
-	}
+	/*
+	 * @Override public void onSendTeammates(Game game) { // TODO Auto-generated
+	 * method stub createTeamPanelList(); }
+	 */
 
 	@Override
 	public void onSetCountdown(String message, int duration) {
@@ -390,5 +392,29 @@ public class ClientUI extends JFrame implements Event {
 		text.setVisible(true);
 		button.setVisible(true);
 		userPanel.setVisible(true);
+	}
+
+	@Override
+	public void onSendTeams(Team redTeam, Team blueTeam) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onDeathReport(String name) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onGlobalDeath(String name, String message) {
+		// TODO Auto-generated method stub
+		self.addMessage(name + " killed " + message);
+	}
+
+	@Override
+	public void onHitReport(String name) {
+		// TODO Auto-generated method stub
+
 	}
 }

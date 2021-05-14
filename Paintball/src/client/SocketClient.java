@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import core.Game;
+import core.Team;
 import server.Payload;
 import server.PayloadType;
 
@@ -206,17 +206,14 @@ public enum SocketClient {
 		}
 	}
 
-	private void sendTeammates(Game game) {
-		Iterator<Event> iter = events.iterator();
-
-		while (iter.hasNext()) {
-			Event e = iter.next();
-
-			if (e != null) {
-				e.onSendTeammates(game);
-			}
-		}
-	}
+	/*
+	 * private void sendTeammates(Game game) { Iterator<Event> iter =
+	 * events.iterator();
+	 * 
+	 * while (iter.hasNext()) { Event e = iter.next();
+	 * 
+	 * if (e != null) { e.onSendTeammates(game); } } }
+	 */
 
 	private void sendCountdown(String message, int duration) {
 		Iterator<Event> iter = events.iterator();
@@ -242,12 +239,68 @@ public enum SocketClient {
 		}
 	}
 
+	private void sendDeathReport(String name) {
+		Iterator<Event> iter = events.iterator();
+
+		while (iter.hasNext()) {
+			Event e = iter.next();
+
+			if (e != null) {
+				e.onDeathReport(name);
+			}
+		}
+	}
+
+	private void sendGlobalDeath(String name, String message) {
+		Iterator<Event> iter = events.iterator();
+
+		while (iter.hasNext()) {
+			Event e = iter.next();
+
+			if (e != null) {
+				e.onGlobalDeath(name, message);
+			}
+		}
+	}
+
+	private void sendHitReport(String name) {
+		Iterator<Event> iter = events.iterator();
+
+		while (iter.hasNext()) {
+			Event e = iter.next();
+
+			if (e != null) {
+				e.onHitReport(name);
+			}
+		}
+	}
+
+	private void sendTeams(Team redTeam, Team blueTeam) {
+		Iterator<Event> iter = events.iterator();
+
+		while (iter.hasNext()) {
+			Event e = iter.next();
+
+			if (e != null) {
+				e.onSendTeams(redTeam, blueTeam);
+			}
+		}
+	}
+
 	protected void spawnProjectile(String name, Point direction) {
 		// System.out.println("Position: " + position);
 		Payload p = new Payload();
 		p.setPayloadType(PayloadType.PROJECTILE);
 		p.setPoint(direction);
 		p.setClientName(name);
+		sendPayload(p);
+	}
+
+	protected void globalDeathReport(String name, String message) {
+		Payload p = new Payload();
+		p.setPayloadType(PayloadType.GLOBAL_DEATH);
+		p.setClientName(name);
+		p.setMessage(message);
 		sendPayload(p);
 	}
 
@@ -290,12 +343,23 @@ public enum SocketClient {
 			break;
 
 		case TEAM:
-			sendTeammates(p.getGame());
+			sendTeams(p.getRedTeam(), p.getBlueTeam());
 			break;
 
 		case SET_COUNTDOWN:
 			sendCountdown(p.getMessage(), p.getNumber());
 			break;
+
+		case DEATH:
+			sendDeathReport(p.getClientName());
+			break;
+
+		case GLOBAL_DEATH:
+			sendGlobalDeath(p.getClientName(), p.getMessage());
+			break;
+
+		case HIT:
+			sendHitReport(p.getClientName());
 
 		default:
 			log.log(Level.WARNING, "unhandled payload on client" + p);

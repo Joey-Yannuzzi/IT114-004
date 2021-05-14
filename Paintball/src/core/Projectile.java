@@ -4,14 +4,17 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
 
+import client.Player;
+
 public class Projectile extends GameObject {
 
 	// private Dimension size = new Dimension(25, 25);
 	// private Point speed = new Point(5, 5);
 	// private Point position;
 	private boolean isShoot = false;
+	private Player owner;
 
-	public Projectile(Color teamColor, Point position, Point direction) {
+	public Projectile(Color teamColor, Point position, Point direction, Player owner) {
 		this.color = teamColor;
 		this.setPosition(position);
 		this.setDirection(direction.x, direction.y);
@@ -45,5 +48,13 @@ public class Projectile extends GameObject {
 			return;
 		}
 
+	}
+
+	public Player getOwner() {
+		return owner;
+	}
+
+	public void setOwner(Player owner) {
+		this.owner = owner;
 	}
 }
