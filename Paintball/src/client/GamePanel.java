@@ -41,6 +41,9 @@ public class GamePanel extends BaseGamePanel implements Event {
 	private Point defaultDirection = new Point(1, 0);
 	Countdown timer;
 	private ClientUI client;
+	private Countdown projectileTimer;
+	private boolean isShooting = true;
+	private int ammo = 2;
 
 	public GamePanel(boolean delay) {
 		super(delay);
@@ -175,7 +178,8 @@ public class GamePanel extends BaseGamePanel implements Event {
 	@Override
 	public void update() {
 		// TODO Auto-generated method stub
-		client.addMessage("" + timer.getTime());
+		// client.addMessage("" + timer.getTime());
+		checkShoot();
 		applyControls();
 		localMovePlayers();
 		localMoveProjectiles();
@@ -221,9 +225,7 @@ public class GamePanel extends BaseGamePanel implements Event {
 
 			boolean changed = myPlayer.setDirection(x, y);
 
-			if (KeyStates.SPACE) {
-				System.out.println("Position: " + myPlayer.getPosition());
-
+			if (KeyStates.SPACE && isShooting) {
 				if (d) {
 					SocketClient.INSTANCE.spawnProjectile(playerUsername, defaultDirection);
 					// myProjectile = new Projectile(myPlayer.getColor(), myPlayer.getPosition(),
@@ -233,6 +235,9 @@ public class GamePanel extends BaseGamePanel implements Event {
 					// myProjectile = new Projectile(myPlayer.getColor(), myPlayer.getPosition(),
 					// myPlayer.getDirection(), projectileSize);
 				}
+
+				isShooting = false;
+				projectileTimer = new Countdown("Projectile", ammo);
 			}
 
 			if (changed) {
@@ -286,6 +291,16 @@ public class GamePanel extends BaseGamePanel implements Event {
 					// System.out.println("Deleted Projectile");
 				}
 			}
+		}
+	}
+
+	private void checkShoot() {
+		if (projectileTimer == null) {
+			return;
+		}
+
+		if (projectileTimer.getTime() < 1) {
+			isShooting = true;
 		}
 	}
 
@@ -344,6 +359,7 @@ public class GamePanel extends BaseGamePanel implements Event {
 	public void quit() {
 		// TODO Auto-generated method stub
 		this.setLoop(null);
+		isShooting = true;
 		log.log(Level.INFO, "GamePanel quit");
 	}
 

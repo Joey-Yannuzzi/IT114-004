@@ -381,9 +381,7 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 		while (iter.hasNext()) {
 			ClientPlayer c = iter.next();
 
-			if (c.client.getClientName().equalsIgnoreCase(player.getClientName()))
-				;
-			{
+			if (c.client.getClientName().equalsIgnoreCase(player.getClientName())) {
 				Projectile p = new Projectile(Color.RED, c.player.getPosition(), direction);
 				projectiles.add(p);
 			}
