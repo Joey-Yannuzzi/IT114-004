@@ -8,7 +8,9 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import core.Game;
+import core.Team;
+
+//import core.Game;
 
 public class ServerThread extends Thread {
 	private Socket client;
@@ -93,12 +95,11 @@ public class ServerThread extends Thread {
 		return (sendPayload(payload));
 	}
 
-	protected boolean sendTeammates(Game game) {
-		Payload payload = new Payload();
-		payload.setPayloadType(PayloadType.TEAM);
-		payload.setGame(game);
-		return (sendPayload(payload));
-	}
+	/*
+	 * protected boolean sendTeammates(Game game) { Payload payload = new Payload();
+	 * payload.setPayloadType(PayloadType.TEAM); payload.setGame(game); return
+	 * (sendPayload(payload)); }
+	 */
 
 	protected boolean sendCountdown(String message, int duration) {
 		Payload payload = new Payload();
@@ -111,6 +112,37 @@ public class ServerThread extends Thread {
 	protected boolean sendEndGame() {
 		Payload payload = new Payload();
 		payload.setPayloadType(PayloadType.END_GAME);
+		return (sendPayload(payload));
+	}
+
+	protected boolean sendDeathReport(String name) {
+		Payload payload = new Payload();
+		payload.setPayloadType(PayloadType.DEATH);
+		payload.setClientName(name);
+		return (sendPayload(payload));
+	}
+
+	protected boolean sendHitReport(String name) {
+		Payload payload = new Payload();
+		payload.setPayloadType(PayloadType.HIT);
+		payload.setClientName(name);
+		return (sendPayload(payload));
+	}
+
+	protected boolean sendGlobalDeath(String name, String message) {
+		Payload payload = new Payload();
+		payload.setPayloadType(PayloadType.GLOBAL_DEATH);
+		payload.setClientName(name);
+		payload.setMessage(message);
+		return (sendPayload(payload));
+	}
+
+	protected boolean sendTeams(Team redTeam, Team blueTeam) {
+		System.out.println("ServerThread");
+		Payload payload = new Payload();
+		payload.setPayloadType(PayloadType.TEAM);
+		payload.setRedTeam(redTeam);
+		payload.setBlueTeam(blueTeam);
 		return (sendPayload(payload));
 	}
 
@@ -187,6 +219,9 @@ public class ServerThread extends Thread {
 			// System.out.println("Position: " + p.getPosition());
 			currentRoom.sendCreateProjectile(this, p.getPoint());
 			break;
+
+		case GLOBAL_DEATH:
+			currentRoom.sendGlobalDeath(p.getClientName(), p.getMessage());
 
 		default:
 			log.log(Level.INFO, "Unhandled payload");

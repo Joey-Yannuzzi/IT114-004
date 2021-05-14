@@ -39,7 +39,7 @@ public class Player extends GameObject implements Serializable {
 		return (this.life);
 	}
 
-	private boolean reduceLife() {
+	public boolean reduceLife() {
 		this.life = -1;
 
 		if (this.life < 1) {

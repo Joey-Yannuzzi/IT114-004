@@ -13,6 +13,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,8 +23,9 @@ import javax.swing.KeyStroke;
 
 import core.BaseGamePanel;
 import core.Countdown;
-import core.Game;
+//import core.Game;
 import core.Projectile;
+import core.Team;
 
 public class GamePanel extends BaseGamePanel implements Event {
 
@@ -44,6 +46,17 @@ public class GamePanel extends BaseGamePanel implements Event {
 	private Countdown projectileTimer;
 	private boolean isShooting = true;
 	private int ammo = 2;
+	private Team myTeam;
+	boolean one = false;
+	boolean two = false;
+	boolean three = false;
+	boolean four = false;
+	boolean five = false;
+	boolean six = false;
+	boolean seven = false;
+	private boolean alive;
+	private Color[] colors = { Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.RED,
+			Color.YELLOW };
 
 	public GamePanel(boolean delay) {
 		super(delay);
@@ -158,6 +171,7 @@ public class GamePanel extends BaseGamePanel implements Event {
 		// TODO Auto-generated method stub
 		players = new ArrayList<Player>();
 		projectiles = new ArrayList<Projectile>();
+		alive = true;
 
 		GamePanel gp = this;
 
@@ -173,17 +187,20 @@ public class GamePanel extends BaseGamePanel implements Event {
 	public void start() {
 		// TODO Auto-generated method stub
 		timer = new Countdown("Test", 60);
+		client.addMessage("1 minute remaining!");
 	}
 
 	@Override
 	public void update() {
 		// TODO Auto-generated method stub
 		// client.addMessage("" + timer.getTime());
-		checkShoot();
-		applyControls();
-		localMovePlayers();
-		localMoveProjectiles();
-		checkProjectilePosition();
+		if (alive) {
+			checkShoot();
+			applyControls();
+			localMovePlayers();
+			localMoveProjectiles();
+			checkProjectilePosition();
+		}
 
 	}
 
@@ -307,6 +324,60 @@ public class GamePanel extends BaseGamePanel implements Event {
 	@Override
 	public void lateUpdate() {
 		// TODO Auto-generated method stub
+		checkTime();
+	}
+
+	private void checkTime() {
+		switch (timer.getTime()) {
+		case 30:
+			if (!one) {
+				client.addMessage("30 seconds remaining!");
+				one = true;
+			}
+			break;
+
+		case 15:
+			if (!two) {
+				client.addMessage("15 seconds remaining!");
+				two = true;
+			}
+			break;
+
+		case 5:
+			if (!three) {
+				client.addMessage("5");
+				three = true;
+			}
+			break;
+
+		case 4:
+			if (!four) {
+				client.addMessage("4");
+				four = true;
+			}
+			break;
+
+		case 3:
+			if (!five) {
+				client.addMessage("3");
+				five = true;
+			}
+			break;
+
+		case 2:
+			if (!six) {
+				client.addMessage("2");
+				six = true;
+			}
+			break;
+
+		case 1:
+			if (!seven) {
+				client.addMessage("1");
+				seven = true;
+			}
+			break;
+		}
 	}
 
 	@Override
@@ -358,8 +429,10 @@ public class GamePanel extends BaseGamePanel implements Event {
 	@Override
 	public void quit() {
 		// TODO Auto-generated method stub
+		client.addMessage("Finished!");
 		this.setLoop(null);
 		isShooting = true;
+		alive = true;
 		log.log(Level.INFO, "GamePanel quit");
 	}
 
@@ -399,13 +472,15 @@ public class GamePanel extends BaseGamePanel implements Event {
 	@Override
 	public synchronized void onSpawnProjectile(String name, Point direction) {
 		// TODO Auto-generated method stub
+		Random rand = new Random();
+		int randColor = rand.nextInt(colors.length);
 		Iterator<Player> iter = players.iterator();
 
 		while (iter.hasNext()) {
 			Player p = iter.next();
 
 			if (p != null && p.getName().equalsIgnoreCase(name)) {
-				Projectile projectile = new Projectile(Color.RED, p.getPosition(), direction);
+				Projectile projectile = new Projectile(colors[randColor], p.getPosition(), direction, p);
 				projectiles.add(projectile);
 			}
 		}
@@ -417,11 +492,12 @@ public class GamePanel extends BaseGamePanel implements Event {
 
 	}
 
-	@Override
-	public void onSendTeammates(Game game) {
-		// TODO Auto-generated method stub
-
-	}
+	/*
+	 * @Override public void onSendTeammates(Game game) { // TODO Auto-generated
+	 * method stub
+	 * 
+	 * }
+	 */
 
 	@Override
 	public void onSetCountdown(String message, int duration) {
@@ -450,4 +526,43 @@ public class GamePanel extends BaseGamePanel implements Event {
 		this.client = client;
 	}
 
+	@Override
+	public void onSendTeams(Team redTeam, Team blueTeam) {
+		// TODO Auto-generated method stub
+		boolean red = redTeam.getPlayerName(playerUsername);
+		boolean blue = blueTeam.getPlayerName(playerUsername);
+
+		if (red) {
+			myTeam = redTeam;
+			myPlayer.setColor(Color.RED);
+			System.out.println("You are red team");
+		} else if (blue) {
+			myTeam = blueTeam;
+			myPlayer.setColor(Color.BLUE);
+			System.out.println("You are blue team");
+		} else {
+			System.out.println("Something went wrong");
+			myPlayer.setColor(Color.WHITE);
+		}
+	}
+
+	@Override
+	public void onDeathReport(String name) {
+		// TODO Auto-generated method stub
+		client.addMessage("You were killed by " + name);
+		alive = false;
+		myPlayer.reduceLife();
+		SocketClient.INSTANCE.globalDeathReport(name, myPlayer.getName());
+	}
+
+	@Override
+	public void onGlobalDeath(String name, String message) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void onHitReport(String name) {
+		// TODO Auto-generated method stub
+		client.addMessage("You were hit by " + name);
+	}
 }

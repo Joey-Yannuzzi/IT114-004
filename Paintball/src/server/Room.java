@@ -7,15 +7,15 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import client.Player;
 import core.BaseGamePanel;
 import core.Countdown;
-import core.Game;
-import core.GameState;
 import core.Projectile;
+import core.Team;
 
 public class Room extends BaseGamePanel implements AutoCloseable {
 	private static SocketServer server;
@@ -26,11 +26,19 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 	private final static String JOIN_ROOM = "joinroom";
 	private final static String CREATE_GAME = "creategame";
 	private List<ClientPlayer> clients = new ArrayList<ClientPlayer>();
+	private List<ClientPlayer> players;
+	private List<ClientPlayer> spectators = new ArrayList<ClientPlayer>();
 	static Dimension gameAreaSize = new Dimension(700, 600);
 	long frame = 0;
-	private Game game;
+	// private Game game;
 	private List<Projectile> projectiles = new ArrayList<Projectile>();
 	private Countdown timer;
+	private Team redTeam;
+	private Team blueTeam;
+	private String red = "red";
+	private String blue = "blue";
+	private Color[] colors = { Color.BLUE, Color.CYAN, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.RED,
+			Color.YELLOW };
 
 	public Room(String name, boolean delayStart) {
 		super(delayStart);
@@ -214,8 +222,9 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 						break;
 					}
 
-					this.setDelay(false);
+					// makeTeams();
 					gameStart();
+					this.setDelay(false);
 					// game.setGameState(GameState.GAME);
 					// sendGameState(game.getGameState());
 					break;
@@ -238,6 +247,46 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 			if (!messageSent) {
 				iter.remove();
 				log.log(Level.INFO, "Removed " + player.client.getId());
+			}
+		}
+	}
+
+	private void makeTeams() {
+		Random rand = new Random();
+		List<ClientPlayer> temp = players;
+		List<ClientPlayer> team1 = new ArrayList<ClientPlayer>();
+		List<ClientPlayer> team2 = new ArrayList<ClientPlayer>();
+		int size = players.size() / 2;
+
+		for (int i = 0; i < size; i++) {
+			int r = rand.nextInt(temp.size());
+			team1.add(temp.get(r));
+			temp.remove(r);
+		}
+
+		redTeam = new Team(team1, red);
+		size = players.size() - size;
+
+		for (int i = 0; i < size; i++) {
+			int r = rand.nextInt(temp.size());
+			team2.add(temp.get(r));
+			temp.remove(r);
+		}
+
+		blueTeam = new Team(team2, blue);
+		System.out.println("Teams created");
+		sendTeams();
+	}
+
+	private void sendTeams() {
+		Iterator<ClientPlayer> iter = clients.iterator();
+
+		while (iter.hasNext()) {
+			ClientPlayer player = iter.next();
+			boolean messageSent = player.client.sendTeams(redTeam, blueTeam);
+
+			if (!messageSent) {
+				iter.remove();
 			}
 		}
 	}
@@ -334,19 +383,34 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 		}
 	}
 
-	protected void sendTeams(Game game) {
+	protected void sendGlobalDeath(String name, String message) {
 		Iterator<ClientPlayer> iter = clients.iterator();
 
 		while (iter.hasNext()) {
 			ClientPlayer player = iter.next();
-			boolean messageSent = player.client.sendTeammates(game);
 
-			if (!messageSent) {
+			if (player.player.getName().equalsIgnoreCase(message)) {
 				iter.remove();
-				log.log(Level.INFO, "Removed client " + player.client.getId());
+			} else {
+				boolean messageSent = player.client.sendGlobalDeath(name, message);
+
+				if (!messageSent) {
+					iter.remove();
+				}
 			}
 		}
 	}
+
+	/*
+	 * protected void sendTeams(Game game) { Iterator<ClientPlayer> iter =
+	 * clients.iterator();
+	 * 
+	 * while (iter.hasNext()) { ClientPlayer player = iter.next(); boolean
+	 * messageSent = player.client.sendTeammates(game);
+	 * 
+	 * if (!messageSent) { iter.remove(); log.log(Level.INFO, "Removed client " +
+	 * player.client.getId()); } } }
+	 */
 
 	protected void sendCountdown(String message, int duration) {
 		Iterator<ClientPlayer> iter = clients.iterator();
@@ -376,33 +440,29 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 
 	private void createProjectile(ServerThread player, Point direction) {
 		// TODO Auto-generated method stub
+		Random rand = new Random();
+		int randColor = rand.nextInt(colors.length);
 		Iterator<ClientPlayer> iter = clients.iterator();
 
 		while (iter.hasNext()) {
 			ClientPlayer c = iter.next();
 
 			if (c.client.getClientName().equalsIgnoreCase(player.getClientName())) {
-				Projectile p = new Projectile(Color.RED, c.player.getPosition(), direction);
+				Projectile p = new Projectile(colors[randColor], c.player.getPosition(), direction, c.player);
 				projectiles.add(p);
 			}
 		}
 	}
 
-	protected void sendGameState(GameState gameState) {
-		switch (gameState) {
-		case LOBBY:
-			break;
-
-		case GAME:
-			game.createGame(clients);
-			System.out.println("Teams have been created");
-			sendTeams(game);
-			break;
-
-		case END:
-			break;
-		}
-	}
+	/*
+	 * protected void sendGameState(GameState gameState) { switch (gameState) { case
+	 * LOBBY: break;
+	 * 
+	 * case GAME: game.createGame(clients);
+	 * System.out.println("Teams have been created"); sendTeams(game); break;
+	 * 
+	 * case END: break; } }
+	 */
 
 	@Override
 	public void close() throws Exception {
@@ -430,8 +490,9 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 	@Override
 	public void awake() {
 		// TODO Auto-generated method stub
+		players = clients;
 
-		game = new Game();
+		// game = new Game();
 	}
 
 	@Override
@@ -520,7 +581,44 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 	public void lateUpdate() {
 		// TODO Auto-generated method stub
 		checkCountdown();
+		projectileCollisionCheck();
 		nextFrame();
+	}
+
+	private void projectileCollisionCheck() {
+		Iterator<ClientPlayer> iter = clients.iterator();
+
+		while (iter.hasNext()) {
+			ClientPlayer player = iter.next();
+
+			if (player != null) {
+				Iterator<Projectile> it = projectiles.iterator();
+
+				while (it.hasNext()) {
+					Projectile projectile = it.next();
+
+					if (projectile != null && projectile.getPosition() == player.player.getPosition()) {
+						it.remove();
+						projectiles.remove(projectile);
+						boolean alive = player.player.reduceLife();
+						boolean messageSent;
+
+						if (!alive) {
+							iter.remove();
+							clients.remove(player);
+							spectators.add(player);
+							messageSent = player.client.sendDeathReport(player.player.getName());
+						} else {
+							messageSent = player.client.sendHitReport(player.player.getName());
+						}
+
+						if (!messageSent) {
+							iter.remove();
+						}
+					}
+				}
+			}
+		}
 	}
 
 	@Override

@@ -3,7 +3,9 @@ package server;
 import java.awt.Point;
 import java.io.Serializable;
 
-import core.Game;
+import core.Team;
+
+//import core.Game;
 
 public class Payload implements Serializable {
 
@@ -12,7 +14,9 @@ public class Payload implements Serializable {
 	private String message;
 	private PayloadType payloadType;
 	private int number;
-	private Game game;
+	private Team redTeam;
+	private Team blueTeam;
+	// private Game game;
 	int x = 0;
 	int y = 0;
 
@@ -63,11 +67,25 @@ public class Payload implements Serializable {
 				getMessage()));
 	}
 
-	public Game getGame() {
-		return game;
+	public Team getRedTeam() {
+		return redTeam;
 	}
 
-	public void setGame(Game game) {
-		this.game = game;
+	public void setRedTeam(Team redTeam) {
+		this.redTeam = redTeam;
 	}
+
+	public Team getBlueTeam() {
+		return blueTeam;
+	}
+
+	public void setBlueTeam(Team blueTeam) {
+		this.blueTeam = blueTeam;
+	}
+
+	/*
+	 * public Game getGame() { return game; }
+	 * 
+	 * public void setGame(Game game) { this.game = game; }
+	 */
 }
