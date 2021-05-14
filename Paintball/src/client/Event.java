@@ -2,6 +2,8 @@ package client;
 
 import java.awt.Point;
 
+import core.Game;
+
 public interface Event {
 	void onClientConnect(String clientName, String message);
 
@@ -16,4 +18,8 @@ public interface Event {
 	void onSyncPosition(String clientName, Point position);
 
 	void onSpawnProjectile(String name, Point direction);
+
+	void onGameStart();
+
+	void onSendTeammates(Game game);
 }

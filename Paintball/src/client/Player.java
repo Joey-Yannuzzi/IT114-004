@@ -14,6 +14,7 @@ public class Player extends GameObject implements Serializable {
 	private static final long serialVersionUID = -6088251166673414031L;
 	Point nameOffset = new Point(0, 5);
 	int life = 3;
+	private String team;
 
 	@Override
 	public boolean draw(Graphics g) {
@@ -57,5 +58,13 @@ public class Player extends GameObject implements Serializable {
 		this.reduceLife();
 		// p.hide(g);
 		return true;
+	}
+
+	public String getTeam() {
+		return team;
+	}
+
+	public void setTeam(String team) {
+		this.team = team;
 	}
 }

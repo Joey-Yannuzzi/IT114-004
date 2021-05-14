@@ -8,6 +8,8 @@ import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import core.Game;
+
 public class ServerThread extends Thread {
 	private Socket client;
 	private ObjectInputStream in;
@@ -82,6 +84,19 @@ public class ServerThread extends Thread {
 		payload.setPayloadType(PayloadType.PROJECTILE);
 		payload.setClientName(client.getClientName());
 		payload.setPoint(direction);
+		return (sendPayload(payload));
+	}
+
+	protected boolean sendGameStart() {
+		Payload payload = new Payload();
+		payload.setPayloadType(PayloadType.START_GAME);
+		return (sendPayload(payload));
+	}
+
+	protected boolean sendTeammates(Game game) {
+		Payload payload = new Payload();
+		payload.setPayloadType(PayloadType.TEAM);
+		payload.setGame(game);
 		return (sendPayload(payload));
 	}
 
