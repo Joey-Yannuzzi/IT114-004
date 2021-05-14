@@ -218,6 +218,30 @@ public enum SocketClient {
 		}
 	}
 
+	private void sendCountdown(String message, int duration) {
+		Iterator<Event> iter = events.iterator();
+
+		while (iter.hasNext()) {
+			Event e = iter.next();
+
+			if (e != null) {
+				e.onSetCountdown(message, duration);
+			}
+		}
+	}
+
+	private void sendGameEnd() {
+		Iterator<Event> iter = events.iterator();
+
+		while (iter.hasNext()) {
+			Event e = iter.next();
+
+			if (e != null) {
+				e.onGameEnd();
+			}
+		}
+	}
+
 	protected void spawnProjectile(String name, Point direction) {
 		// System.out.println("Position: " + position);
 		Payload p = new Payload();
@@ -261,8 +285,17 @@ public enum SocketClient {
 			sendGameStart();
 			break;
 
+		case END_GAME:
+			sendGameEnd();
+			break;
+
 		case TEAM:
 			sendTeammates(p.getGame());
+			break;
+
+		case SET_COUNTDOWN:
+			sendCountdown(p.getMessage(), p.getNumber());
+			break;
 
 		default:
 			log.log(Level.WARNING, "unhandled payload on client" + p);

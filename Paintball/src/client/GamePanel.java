@@ -21,6 +21,7 @@ import javax.swing.InputMap;
 import javax.swing.KeyStroke;
 
 import core.BaseGamePanel;
+import core.Countdown;
 import core.Game;
 import core.Projectile;
 
@@ -38,6 +39,8 @@ public class GamePanel extends BaseGamePanel implements Event {
 	private Projectile myProjectile;
 	private Dimension projectileSize = new Dimension(25, 25);
 	private Point defaultDirection = new Point(1, 0);
+	Countdown timer;
+	private ClientUI client;
 
 	public GamePanel(boolean delay) {
 		super(delay);
@@ -150,7 +153,6 @@ public class GamePanel extends BaseGamePanel implements Event {
 	@Override
 	public void awake() {
 		// TODO Auto-generated method stub
-
 		players = new ArrayList<Player>();
 		projectiles = new ArrayList<Projectile>();
 
@@ -167,12 +169,13 @@ public class GamePanel extends BaseGamePanel implements Event {
 	@Override
 	public void start() {
 		// TODO Auto-generated method stub
+		timer = new Countdown("Test", 60);
 	}
 
 	@Override
 	public void update() {
 		// TODO Auto-generated method stub
-
+		client.addMessage("" + timer.getTime());
 		applyControls();
 		localMovePlayers();
 		localMoveProjectiles();
@@ -240,7 +243,7 @@ public class GamePanel extends BaseGamePanel implements Event {
 		}
 	}
 
-	private void localMovePlayers() {
+	private synchronized void localMovePlayers() {
 		Iterator<Player> iter = players.iterator();
 
 		while (iter.hasNext()) {
@@ -280,7 +283,7 @@ public class GamePanel extends BaseGamePanel implements Event {
 						|| p.getPosition().y <= lowerBounds.y || p.getPosition().y >= upperBounds.y) {
 					iter.remove();
 					projectiles.remove(p);
-					System.out.println("Deleted Projectile");
+					// System.out.println("Deleted Projectile");
 				}
 			}
 		}
@@ -340,7 +343,7 @@ public class GamePanel extends BaseGamePanel implements Event {
 	@Override
 	public void quit() {
 		// TODO Auto-generated method stub
-
+		this.setLoop(null);
 		log.log(Level.INFO, "GamePanel quit");
 	}
 
@@ -402,6 +405,33 @@ public class GamePanel extends BaseGamePanel implements Event {
 	public void onSendTeammates(Game game) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public void onSetCountdown(String message, int duration) {
+		// TODO Auto-generated method stub
+		if (timer != null) {
+			timer.cancel();
+		}
+
+		timer = new Countdown(message, duration, (x) -> {
+			System.out.println("expired");
+			System.out.println(x);
+		});
+	}
+
+	@Override
+	public void onGameEnd() {
+		// TODO Auto-generated method stub
+		isRunning = false;
+	}
+
+	public ClientUI getClient() {
+		return client;
+	}
+
+	public void setClient(ClientUI client) {
+		this.client = client;
 	}
 
 }

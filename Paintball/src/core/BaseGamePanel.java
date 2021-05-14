@@ -48,6 +48,14 @@ public abstract class BaseGamePanel extends JPanel {
 		return (delayGameLoop);
 	}
 
+	public void setLoop(Thread gameLoop) {
+		this.gameLoop = gameLoop;
+	}
+
+	public Thread getLoop() {
+		return (this.gameLoop);
+	}
+
 	public void startGameLoop() {
 		if (gameLoop == null) {
 			isRunning = true;
