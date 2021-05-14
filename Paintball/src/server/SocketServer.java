@@ -20,6 +20,7 @@ public class SocketServer {
 	private final static String PRELOBBY = "PreLobby";
 	protected final static String LOBBY = "Lobby";
 	private final static Logger log = Logger.getLogger(SocketServer.class.getName());
+	private static boolean delay = true;
 
 	private void start(int port) {
 		this.port = port;
@@ -28,7 +29,7 @@ public class SocketServer {
 		try (ServerSocket serverSocket = new ServerSocket(port);) {
 			isRunning = true;
 			Room.setServer(this);
-			lobby = new Room(LOBBY);
+			lobby = new Room(LOBBY, delay);
 			rooms.add(lobby);
 
 			while (SocketServer.isRunning) {
@@ -173,7 +174,7 @@ public class SocketServer {
 			log.log(Level.INFO, "Room exists");
 			return (false);
 		} else {
-			Room room = new Room(roomName);
+			Room room = new Room(roomName, delay);
 			rooms.add(room);
 			log.log(Level.INFO, "Created room: " + roomName);
 			return (true);

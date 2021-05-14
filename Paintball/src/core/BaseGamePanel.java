@@ -36,6 +36,18 @@ public abstract class BaseGamePanel extends JPanel {
 		}
 	}
 
+	public void setDelay(boolean delay) {
+		delayGameLoop = delay;
+
+		if (!delayGameLoop) {
+			startGameLoop();
+		}
+	}
+
+	public boolean getDelay() {
+		return (delayGameLoop);
+	}
+
 	public void startGameLoop() {
 		if (gameLoop == null) {
 			isRunning = true;
@@ -43,6 +55,7 @@ public abstract class BaseGamePanel extends JPanel {
 			gameLoop = new Thread() {
 				@Override
 				public void run() {
+					System.out.println("Gameloop started");
 					bgp.start();
 
 					if (!isServer) {

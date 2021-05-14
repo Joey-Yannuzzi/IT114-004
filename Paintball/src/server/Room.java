@@ -207,16 +207,15 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 				case CREATE_GAME:
 					wasCommand = true;
 
-					if (game.getActive() == true) {
-						System.out.println("Game already exists");
-						break;
-					} else if (this.getName().equalsIgnoreCase("lobby")) {
+					if (this.getName().equalsIgnoreCase("lobby")) {
 						System.out.println("Cannot create game in the Lobby");
 						break;
 					}
 
-					game.setGameState(GameState.GAME);
-					sendGameState(game.getGameState());
+					this.setDelay(false);
+					gameStart();
+					// game.setGameState(GameState.GAME);
+					// sendGameState(game.getGameState());
 					break;
 				}
 			}
@@ -225,6 +224,20 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 		}
 
 		return (wasCommand);
+	}
+
+	private void gameStart() {
+		Iterator<ClientPlayer> iter = clients.iterator();
+
+		while (iter.hasNext()) {
+			ClientPlayer player = iter.next();
+			boolean messageSent = player.client.sendGameStart();
+
+			if (!messageSent) {
+				iter.remove();
+				log.log(Level.INFO, "Removed " + player.client.getId());
+			}
+		}
 	}
 
 	protected void sendConnectionStatus(ServerThread client, boolean isConnect, String message) {
@@ -319,6 +332,20 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 		}
 	}
 
+	private void sendTeams(Game game) {
+		Iterator<ClientPlayer> iter = clients.iterator();
+
+		while (iter.hasNext()) {
+			ClientPlayer player = iter.next();
+			boolean messageSent = player.client.sendTeammates(game);
+
+			if (!messageSent) {
+				iter.remove();
+				log.log(Level.INFO, "Removed client " + player.client.getId());
+			}
+		}
+	}
+
 	private void createProjectile(ServerThread player, Point direction) {
 		// TODO Auto-generated method stub
 		Iterator<ClientPlayer> iter = clients.iterator();
@@ -343,6 +370,7 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 		case GAME:
 			game.createGame(clients);
 			System.out.println("Teams have been created");
+			sendTeams(game);
 			break;
 
 		case END:

@@ -30,6 +30,8 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
 
+import core.Game;
+
 public class ClientUI extends JFrame implements Event {
 
 	private static final long serialVersionUID = 1L;
@@ -38,10 +40,15 @@ public class ClientUI extends JFrame implements Event {
 	JPanel textArea;
 	private final static Logger log = Logger.getLogger(ClientUI.class.getName());
 	JPanel userPanel;
+	JPanel teamPanel;
+	JTextField text;
+	JButton button;
 	List<User> users = new ArrayList<User>();
+	List<User> teammates = new ArrayList<User>();
 	Dimension windowSize = Toolkit.getDefaultToolkit().getScreenSize();
 	GamePanel game;
 	String username;
+	private static boolean delay = true;
 
 	public ClientUI(String title) {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -137,9 +144,9 @@ public class ClientUI extends JFrame implements Event {
 		panel.add(scroll, BorderLayout.CENTER);
 		JPanel input = new JPanel();
 		input.setLayout(new BoxLayout(input, BoxLayout.X_AXIS));
-		JTextField text = new JTextField();
+		text = new JTextField();
 		input.add(text);
-		JButton button = new JButton("Send");
+		button = new JButton("Send");
 		text.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "sendAction");
 
 		text.getActionMap().put("sendAction", new AbstractAction() {
@@ -175,8 +182,20 @@ public class ClientUI extends JFrame implements Event {
 		textArea.getParent().getParent().getParent().add(scroll, BorderLayout.EAST);
 	}
 
+	void createTeamPanelList() {
+		teamPanel = new JPanel();
+		teamPanel.setLayout(new BoxLayout(teamPanel, BoxLayout.Y_AXIS));
+		teamPanel.setAlignmentY(Component.TOP_ALIGNMENT);
+		JScrollPane scroll = new JScrollPane(teamPanel);
+		scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+		Dimension d = new Dimension(100, windowSize.height);
+		scroll.setPreferredSize(d);
+		textArea.getParent().getParent().getParent().add(scroll, BorderLayout.EAST);
+	}
+
 	void createDrawingPanel() {
-		game = new GamePanel();
+		game = new GamePanel(delay);
 		game.setPreferredSize(new Dimension((int) (windowSize.width * .6), windowSize.height));
 		textArea.getParent().getParent().getParent().add(game, BorderLayout.WEST);
 		SocketClient.INSTANCE.registerCallbackListener(game);
@@ -200,6 +219,24 @@ public class ClientUI extends JFrame implements Event {
 		client.removeAll();
 		userPanel.revalidate();
 		userPanel.repaint();
+	}
+
+	void addTeammate(String name) {
+		User u = new User(name);
+		Dimension p = new Dimension(teamPanel.getSize().width, 30);
+		u.setPreferredSize(p);
+		u.setMinimumSize(p);
+		u.setMaximumSize(p);
+		teamPanel.add(u);
+		teammates.add(u);
+		pack();
+	}
+
+	void removeTeammate(User client) {
+		teamPanel.remove(client);
+		client.removeAll();
+		teamPanel.revalidate();
+		teamPanel.repaint();
 	}
 
 	int calcHeightForText(String str) {
@@ -319,5 +356,21 @@ public class ClientUI extends JFrame implements Event {
 	public void onSpawnProjectile(String name, Point direction) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public void onGameStart() {
+		// TODO Auto-generated method stub
+		text.setVisible(false);
+		button.setVisible(false);
+		userPanel.setVisible(false);
+		game.setDelay(false);
+		game.getRootPane().grabFocus();
+	}
+
+	@Override
+	public void onSendTeammates(Game game) {
+		// TODO Auto-generated method stub
+		createTeamPanelList();
 	}
 }

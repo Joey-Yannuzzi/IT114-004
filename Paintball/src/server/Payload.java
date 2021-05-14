@@ -3,6 +3,8 @@ package server;
 import java.awt.Point;
 import java.io.Serializable;
 
+import core.Game;
+
 public class Payload implements Serializable {
 
 	private static final long serialVersionUID = -6687715510484845706L;
@@ -10,6 +12,7 @@ public class Payload implements Serializable {
 	private String message;
 	private PayloadType payloadType;
 	private int number;
+	private Game game;
 	int x = 0;
 	int y = 0;
 
@@ -58,5 +61,13 @@ public class Payload implements Serializable {
 	public String toString() {
 		return (String.format("Type[%s], Number[%s], Message[%s]", getPayloadType().toString(), getNumber(),
 				getMessage()));
+	}
+
+	public Game getGame() {
+		return game;
+	}
+
+	public void setGame(Game game) {
+		this.game = game;
 	}
 }

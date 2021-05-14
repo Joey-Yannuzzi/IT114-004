@@ -8,6 +8,8 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -19,6 +21,7 @@ import javax.swing.InputMap;
 import javax.swing.KeyStroke;
 
 import core.BaseGamePanel;
+import core.Game;
 import core.Projectile;
 
 public class GamePanel extends BaseGamePanel implements Event {
@@ -35,6 +38,10 @@ public class GamePanel extends BaseGamePanel implements Event {
 	private Projectile myProjectile;
 	private Dimension projectileSize = new Dimension(25, 25);
 	private Point defaultDirection = new Point(1, 0);
+
+	public GamePanel(boolean delay) {
+		super(delay);
+	}
 
 	public void setPlayerName(String name) {
 		playerUsername = name;
@@ -146,6 +153,15 @@ public class GamePanel extends BaseGamePanel implements Event {
 
 		players = new ArrayList<Player>();
 		projectiles = new ArrayList<Projectile>();
+
+		GamePanel gp = this;
+
+		addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				gp.getRootPane().grabFocus();
+			}
+		});
 	}
 
 	@Override
@@ -374,6 +390,18 @@ public class GamePanel extends BaseGamePanel implements Event {
 				projectiles.add(projectile);
 			}
 		}
+	}
+
+	@Override
+	public void onGameStart() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onSendTeammates(Game game) {
+		// TODO Auto-generated method stub
+
 	}
 
 }

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import core.Game;
 import server.Payload;
 import server.PayloadType;
 
@@ -193,6 +194,30 @@ public enum SocketClient {
 		}
 	}
 
+	private void sendGameStart() {
+		Iterator<Event> iter = events.iterator();
+
+		while (iter.hasNext()) {
+			Event e = iter.next();
+
+			if (e != null) {
+				e.onGameStart();
+			}
+		}
+	}
+
+	private void sendTeammates(Game game) {
+		Iterator<Event> iter = events.iterator();
+
+		while (iter.hasNext()) {
+			Event e = iter.next();
+
+			if (e != null) {
+				e.onSendTeammates(game);
+			}
+		}
+	}
+
 	protected void spawnProjectile(String name, Point direction) {
 		// System.out.println("Position: " + position);
 		Payload p = new Payload();
@@ -231,6 +256,13 @@ public enum SocketClient {
 		case PROJECTILE:
 			sendSpawnProjectile(p.getClientName(), p.getPoint());
 			break;
+
+		case START_GAME:
+			sendGameStart();
+			break;
+
+		case TEAM:
+			sendTeammates(p.getGame());
 
 		default:
 			log.log(Level.WARNING, "unhandled payload on client" + p);
