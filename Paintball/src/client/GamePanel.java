@@ -564,5 +564,6 @@ public class GamePanel extends BaseGamePanel implements Event {
 	public void onHitReport(String name) {
 		// TODO Auto-generated method stub
 		client.addMessage("You were hit by " + name);
+		myPlayer.reduceLife();
 	}
 }
