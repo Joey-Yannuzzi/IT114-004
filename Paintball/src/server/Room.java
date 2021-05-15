@@ -581,44 +581,57 @@ public class Room extends BaseGamePanel implements AutoCloseable {
 	public void lateUpdate() {
 		// TODO Auto-generated method stub
 		checkCountdown();
-		projectileCollisionCheck();
+		// projectileCollisionCheck();
 		nextFrame();
 	}
 
-	private void projectileCollisionCheck() {
+	protected synchronized void projectileCollisionCheck(ServerThread client) {
+		ClientPlayer player = getCP(client);
+		Iterator<Projectile> iter = projectiles.iterator();
+
+		while (iter.hasNext()) {
+			Projectile projectile = iter.next();
+
+			try {
+				if (projectile != null) {
+					Point p = player.player.getCenter();
+					Point pp = projectile.getCenter();
+					System.out.println("Player: " + p);
+					System.out.println("Projectile: " + pp);
+					System.out.println("Distance: " + pp.distance(p));
+					int distance = (int) ((projectile.getSize().height * .5) + (player.player.getSize().width * .5));
+
+					if (pp.distanceSq(p) <= (distance * distance)) {
+						iter.remove();
+						projectiles.remove(projectile);
+						boolean alive = player.player.reduceLife();
+
+						if (!alive) {
+							clients.remove(player);
+							client.sendDeathReport(projectile.getOwner().getName());
+						} else {
+							client.sendHitReport(projectile.getOwner().getName());
+						}
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private ClientPlayer getCP(ServerThread client) {
 		Iterator<ClientPlayer> iter = clients.iterator();
 
 		while (iter.hasNext()) {
 			ClientPlayer player = iter.next();
 
-			if (player != null) {
-				Iterator<Projectile> it = projectiles.iterator();
-
-				while (it.hasNext()) {
-					Projectile projectile = it.next();
-
-					if (projectile != null && projectile.getPosition() == player.player.getPosition()) {
-						it.remove();
-						projectiles.remove(projectile);
-						boolean alive = player.player.reduceLife();
-						boolean messageSent;
-
-						if (!alive) {
-							iter.remove();
-							clients.remove(player);
-							spectators.add(player);
-							messageSent = player.client.sendDeathReport(player.player.getName());
-						} else {
-							messageSent = player.client.sendHitReport(player.player.getName());
-						}
-
-						if (!messageSent) {
-							iter.remove();
-						}
-					}
-				}
+			if (player.client == client) {
+				return (player);
 			}
 		}
+
+		return (null);
 	}
 
 	@Override

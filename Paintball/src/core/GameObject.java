@@ -97,6 +97,10 @@ public abstract class GameObject {
 		this.size = size;
 	}
 
+	public Dimension getSize() {
+		return (size);
+	}
+
 	public void setPosition(Point position) {
 		previousPosition.x = position.x;
 		previousPosition.y = position.y;
@@ -110,6 +114,13 @@ public abstract class GameObject {
 
 	public boolean changedPosition() {
 		return (previousPosition.x != position.x || previousPosition.y != position.y);
+	}
+
+	public Point getCenter() {
+		Point p = (Point) position.clone();
+		p.x += size.width * 5;
+		p.y += size.height * 5;
+		return (p);
 	}
 
 	public boolean draw(Graphics g) {
